@@ -11,7 +11,7 @@ export const ConfirmationScreen = () => {
     <section className="mx-auto mt-10 max-w-2xl rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-slate-100">
       <CheckCircle2 className="mx-auto h-16 w-16 text-[#B1C20E]" />
       <h1 className="mt-4 text-3xl font-semibold text-slate-900">
-        ¡Bienvenido a la familia Zoco!
+        ¡Bienvenido aliado Zoco!
       </h1>
       <p className="mt-3 text-slate-600">
         Recibimos tu solicitud de alta y ya estamos trabajando para activar tu cuenta.
