@@ -37,8 +37,8 @@ export const StepLayout = ({
   const progress = Math.round((step / totalSteps) * 100);
 
   return (
-    <section className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-100">
-      <header className="flex flex-col gap-4 border-b border-slate-100 pb-6">
+    <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 sm:p-8">
+      <header className="flex flex-col gap-3 border-b border-slate-100 pb-6 sm:gap-4">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-[#B1C20E]">
             Paso {step} de {totalSteps}
@@ -48,14 +48,14 @@ export const StepLayout = ({
             <p className="text-sm text-slate-600">{description}</p>
           )}
         </div>
-        <div className="h-2 rounded-full bg-slate-100">
+        <div className="h-1.5 rounded-full bg-slate-100 sm:h-2">
           <div
             className="h-full rounded-full bg-[#B1C20E] transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
       </header>
-      <div className="mt-6 flex flex-col gap-6">{children}</div>
+      <div className="mt-6 flex flex-col gap-5 sm:gap-6">{children}</div>
       <footer className="mt-8 flex flex-col gap-4 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {onBack && (

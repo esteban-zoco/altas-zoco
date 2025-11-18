@@ -25,12 +25,17 @@ const StepContent = () => {
 const OnboardingShell = () => (
   <div className="min-h-screen bg-slate-50">
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
-      <header className="space-y-4">
-        <Image src={Logo} alt="Logo de Zoco" className="h-8 w-auto" priority />
-        <h1 className="text-4xl font-semibold text-slate-900">
+      <header className="space-y-3">
+        <Image
+          src={Logo}
+          alt="Logo de Zoco"
+          className="h-8 w-auto sm:h-10"
+          priority
+        />
+        <h1 className="text-2xl font-semibold text-slate-900 sm:text-4xl mt-[40px]" style={{lineHeight: "24px"}}>
           Activá tus cobros en apenas tres pasos
         </h1>
-        <p className="text-base text-slate-600">
+        <p className="text-sm text-slate-600 sm:text-base">
           Te pedimos solo lo imprescindible para validar tu comercio según la
           normativa argentina. Podés guardar tu avance y seguir después.
         </p>

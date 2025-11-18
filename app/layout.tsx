@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Onboarding Zoco Altas",
+  title: "Zoco Altas",
   description:
     "Formulario de alta para comercios que quieren cobrar con Zoco en Argentina.",
 };
