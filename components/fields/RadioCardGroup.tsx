@@ -28,7 +28,7 @@ export const RadioCardGroup = ({
           key={option.value}
           onClick={() => onChange(option.value)}
           className={clsx(
-            "rounded-2xl border px-4 py-3 text-left transition",
+            "rounded-2xl border px-4 py-3 text-left transition cursor-pointer",
             selected
               ? "border-[#B1C20E] bg-[#B1C20E]/10"
               : "border-slate-200 hover:border-slate-300",

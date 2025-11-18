@@ -249,7 +249,7 @@ export const StepTwo = () => {
                     En caso afirmativo, indicá el motivo y adjuntá cualquier
                     detalle relevante. Consultá la{" "}
                     <a
-                      href="https://www.argentina.gob.ar/normativa/nacional/ley-25246-59842"
+                      href="https://www.bna.com.ar/Downloads/F61050AnexoDatosDelCliente_NominaDeFuncionesPEPS.pdf"
                       target="_blank"
                       rel="noreferrer"
                       className="font-semibold text-[#B1C20E]"
