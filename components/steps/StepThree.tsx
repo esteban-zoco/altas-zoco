@@ -59,6 +59,7 @@ export const StepThree = () => {
       if (!naturalDocs.dniFront.length) missing.push("DNI frente");
       if (!naturalDocs.dniBack.length) missing.push("DNI dorso");
       if (!naturalDocs.cbu.length) missing.push("Constancia / captura de CBU");
+      if (!naturalDocs.afip.length) missing.push("Constancia AFIP / ARCA");
       if (!naturalDocs.rentas.length) missing.push("Constancia de Rentas");
     } else {
       if (!legalDocs.dniRepresentativeFront.length)
@@ -275,8 +276,8 @@ export const StepThree = () => {
                 onFilesChange={(files) => updateNaturalFiles("cbu", files)}
               />
               <FileUploadItem
-                title="Constancia ARCA "
-                optional
+                title="Constancia AFIP / ARCA"
+                description="Subi una constancia vigente emitida por AFIP o ARCA."
                 accept={ACCEPT_IMAGES_AND_PDF}
                 files={naturalDocs.afip}
                 onFilesChange={(files) => updateNaturalFiles("afip", files)}
