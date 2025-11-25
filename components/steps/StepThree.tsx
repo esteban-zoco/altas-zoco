@@ -275,7 +275,7 @@ export const StepThree = () => {
                 onFilesChange={(files) => updateNaturalFiles("cbu", files)}
               />
               <FileUploadItem
-                title="Constancia AFIP (opcional)"
+                title="Constancia ARCA "
                 optional
                 accept={ACCEPT_IMAGES_AND_PDF}
                 files={naturalDocs.afip}
@@ -308,7 +308,7 @@ export const StepThree = () => {
                 }
               />
               <FileUploadItem
-                title="Constancia de CUIT de la sociedad (AFIP)"
+                title="Constancia de CUIT de la sociedad (ARCA)"
                 accept={ACCEPT_IMAGES_AND_PDF}
                 files={legalDocs.companyCuit}
                 onFilesChange={(files) => updateLegalFiles("companyCuit", files)}
