@@ -48,6 +48,7 @@ const buildHtml = (payload: OnboardingPayload) => `
     <li>Nombre de fantasía: ${payload.basicData.fantasyName}</li>
     <li>Email: ${payload.basicData.contactEmail}</li>
     <li>Teléfono: ${payload.basicData.phone}</li>
+    <li>Domicilio del comercio: ${buildAddress(payload.basicData.commercialAddress)}</li>
     <li>CBU / CVU o Alias: ${payload.basicData.bankIdentifier}</li>
   </ul>
   <h2>Datos legales / fiscales</h2>
@@ -111,6 +112,7 @@ Tipo de persona: ${payload.personType === "PF" ? "Persona Física" : "Persona Ju
 Nombre de fantasía: ${payload.basicData.fantasyName}
 Email: ${payload.basicData.contactEmail}
 Teléfono: ${payload.basicData.phone}
+Domicilio del comercio: ${buildAddress(payload.basicData.commercialAddress)}
 
 Datos legales:
 ${
