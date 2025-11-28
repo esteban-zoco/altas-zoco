@@ -9,6 +9,7 @@ import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import type {
   LegalPersonDocuments,
   NaturalPersonDocuments,
+  OnboardingSubmissionPayload,
 } from "@/types/onboarding";
 
 const ACCEPT_IMAGES_AND_PDF =
@@ -82,35 +83,36 @@ export const StepThree = () => {
     return missing;
   };
 
-  const buildFormData = () => {
-    const formData = new FormData();
-    const payload = {
-      personType: state.personType,
-      basicData: state.basicData,
-      naturalPersonData: state.naturalPersonData,
-      legalPersonData: state.legalPersonData,
-      documentsMeta: {
-        natural: {
-          dniFront: naturalDocs.dniFront.map((file) => file.name),
-          dniBack: naturalDocs.dniBack.map((file) => file.name),
-          cbu: naturalDocs.cbu.map((file) => file.name),
-          afip: naturalDocs.afip.map((file) => file.name),
-          rentas: naturalDocs.rentas.map((file) => file.name),
-        },
-        legal: {
-          dniRepresentativeFront: legalDocs.dniRepresentativeFront.map(
-            (file) => file.name,
-          ),
-          dniRepresentativeBack: legalDocs.dniRepresentativeBack.map(
-            (file) => file.name,
-          ),
-          companyCuit: legalDocs.companyCuit.map((file) => file.name),
-          companyCbu: legalDocs.companyCbu.map((file) => file.name),
-          bylaws: legalDocs.bylaws.map((file) => file.name),
-          rentas: legalDocs.rentas.map((file) => file.name),
-        },
+  const buildSubmissionPayload = (): OnboardingSubmissionPayload => ({
+    personType: state.personType,
+    basicData: state.basicData,
+    naturalPersonData: state.naturalPersonData,
+    legalPersonData: state.legalPersonData,
+    documentsMeta: {
+      natural: {
+        dniFront: naturalDocs.dniFront.map((file) => file.name),
+        dniBack: naturalDocs.dniBack.map((file) => file.name),
+        cbu: naturalDocs.cbu.map((file) => file.name),
+        afip: naturalDocs.afip.map((file) => file.name),
+        rentas: naturalDocs.rentas.map((file) => file.name),
       },
-    };
+      legal: {
+        dniRepresentativeFront: legalDocs.dniRepresentativeFront.map(
+          (file) => file.name,
+        ),
+        dniRepresentativeBack: legalDocs.dniRepresentativeBack.map(
+          (file) => file.name,
+        ),
+        companyCuit: legalDocs.companyCuit.map((file) => file.name),
+        companyCbu: legalDocs.companyCbu.map((file) => file.name),
+        bylaws: legalDocs.bylaws.map((file) => file.name),
+        rentas: legalDocs.rentas.map((file) => file.name),
+      },
+    },
+  });
+
+  const buildFormData = (payload: OnboardingSubmissionPayload) => {
+    const formData = new FormData();
     formData.append("payload", JSON.stringify(payload));
 
     naturalDocs.dniFront.forEach((file, index) =>
@@ -195,7 +197,8 @@ export const StepThree = () => {
 
     setIsSubmitting(true);
     try {
-      const body = buildFormData();
+      const payload = buildSubmissionPayload();
+      const body = buildFormData(payload);
       const response = await fetch("/api/onboarding-submit", {
         method: "POST",
         body,
@@ -204,7 +207,7 @@ export const StepThree = () => {
         const error = await response.json().catch(() => null);
         throw new Error(error?.error ?? "Error inesperado");
       }
-      markComplete();
+      markComplete(payload);
     } catch (error) {
       console.error("Error enviando solicitud", error);
       if (

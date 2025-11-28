@@ -18,12 +18,57 @@ import {
   NaturalPersonData,
   NaturalPersonDocuments,
   OnboardingFormState,
+  OnboardingSubmissionPayload,
   OnboardingStep,
   PersonType,
+  SubmittedOnboardingSummary,
   createEmptyOnboardingState,
 } from "@/types/onboarding";
 
 const STORAGE_KEY = "zoco-onboarding-draft";
+export const SUBMISSION_STORAGE_KEY = "zoco-onboarding-last-submission";
+
+interface StoredSubmissionSummary {
+  payload: OnboardingSubmissionPayload;
+  submittedAt: string;
+}
+
+export const readStoredSubmission = (): SubmittedOnboardingSummary | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.localStorage.getItem(SUBMISSION_STORAGE_KEY);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as StoredSubmissionSummary;
+    return {
+      payload: parsed.payload,
+      submittedAt: new Date(parsed.submittedAt),
+    };
+  } catch (error) {
+    console.error("No se pudo leer la solicitud enviada", error);
+    return null;
+  }
+};
+
+export const persistSubmission = (
+  summary: SubmittedOnboardingSummary | null,
+) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (summary) {
+      window.localStorage.setItem(
+        SUBMISSION_STORAGE_KEY,
+        JSON.stringify({
+          payload: summary.payload,
+          submittedAt: summary.submittedAt.toISOString(),
+        }),
+      );
+    } else {
+      window.localStorage.removeItem(SUBMISSION_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error("No se pudo guardar la solicitud enviada", error);
+  }
+};
 
 interface OnboardingContextValue {
   state: OnboardingFormState;
@@ -31,6 +76,7 @@ interface OnboardingContextValue {
   isComplete: boolean;
   lastDraftSavedAt: Date | null;
   showResumePrompt: boolean;
+  lastSubmission: SubmittedOnboardingSummary | null;
   nextStep: () => void;
   previousStep: () => void;
   goToStep: (step: OnboardingStep) => void;
@@ -43,7 +89,7 @@ interface OnboardingContextValue {
   saveDraft: () => void;
   resumeDraft: () => void;
   discardDraft: () => void;
-  markComplete: () => void;
+  markComplete: (payload?: OnboardingSubmissionPayload) => void;
   resetAll: () => void;
   clearDraft: () => void;
 }
@@ -67,6 +113,8 @@ export const OnboardingFormProvider = ({
     null,
   );
   const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [lastSubmission, setLastSubmission] =
+    useState<SubmittedOnboardingSummary | null>(() => readStoredSubmission());
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -222,16 +270,24 @@ export const OnboardingFormProvider = ({
     setShowResumePrompt(false);
   }, [clearDraft]);
 
-  const markComplete = useCallback(() => {
-    setIsComplete(true);
-    setState(createEmptyOnboardingState());
-    setCurrentStep(1);
-    setLastDraftSavedAt(null);
-    clearDraft();
-  }, [clearDraft]);
+  const markComplete = useCallback(
+    (payload?: OnboardingSubmissionPayload) => {
+      setIsComplete(true);
+      const summary = payload ? { payload, submittedAt: new Date() } : null;
+      setLastSubmission(summary);
+    persistSubmission(summary);
+      setState(createEmptyOnboardingState());
+      setCurrentStep(1);
+      setLastDraftSavedAt(null);
+      clearDraft();
+    },
+    [clearDraft],
+  );
 
   const resetAll = useCallback(() => {
     setIsComplete(false);
+    setLastSubmission(null);
+    persistSubmission(null);
     setState(createEmptyOnboardingState());
     setCurrentStep(1);
     setLastDraftSavedAt(null);
@@ -244,6 +300,7 @@ export const OnboardingFormProvider = ({
       isComplete,
       lastDraftSavedAt,
       showResumePrompt,
+      lastSubmission,
       nextStep,
       previousStep,
       goToStep,
@@ -266,6 +323,7 @@ export const OnboardingFormProvider = ({
       isComplete,
       lastDraftSavedAt,
       showResumePrompt,
+      lastSubmission,
       nextStep,
       previousStep,
       goToStep,

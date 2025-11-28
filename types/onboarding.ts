@@ -178,3 +178,34 @@ export interface DraftOnboardingState {
   legalPersonData: LegalPersonData;
   step: OnboardingStep;
 }
+
+export interface SubmissionDocumentsMeta {
+  natural: {
+    dniFront: string[];
+    dniBack: string[];
+    cbu: string[];
+    afip: string[];
+    rentas: string[];
+  };
+  legal: {
+    dniRepresentativeFront: string[];
+    dniRepresentativeBack: string[];
+    companyCuit: string[];
+    companyCbu: string[];
+    bylaws: string[];
+    rentas: string[];
+  };
+}
+
+export interface OnboardingSubmissionPayload {
+  personType: PersonType;
+  basicData: BasicData;
+  naturalPersonData: NaturalPersonData;
+  legalPersonData: LegalPersonData;
+  documentsMeta: SubmissionDocumentsMeta;
+}
+
+export interface SubmittedOnboardingSummary {
+  payload: OnboardingSubmissionPayload;
+  submittedAt: Date;
+}

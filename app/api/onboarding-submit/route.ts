@@ -1,43 +1,16 @@
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 
-import type {
-  BasicData,
-  LegalPersonData,
-  NaturalPersonData,
-  PersonType,
-} from "@/types/onboarding";
+import type { OnboardingSubmissionPayload } from "@/types/onboarding";
 
-interface OnboardingPayload {
-  personType: PersonType;
-  basicData: BasicData;
-  naturalPersonData: NaturalPersonData;
-  legalPersonData: LegalPersonData;
-  documentsMeta: {
-    natural: {
-      dniFront: string[];
-      dniBack: string[];
-      cbu: string[];
-      afip: string[];
-      rentas: string[];
-    };
-    legal: {
-      dniRepresentativeFront: string[];
-      dniRepresentativeBack: string[];
-      companyCuit: string[];
-      companyCbu: string[];
-      bylaws: string[];
-      rentas: string[];
-    };
-  };
-}
-
-const buildAddress = (address: NaturalPersonData["address"]) =>
+const buildAddress = (
+  address: OnboardingSubmissionPayload["basicData"]["commercialAddress"],
+) =>
   `${address.street} ${address.number}${
     address.floor ? `, ${address.floor}` : ""
   } - ${address.city}, ${address.province} (${address.postalCode})`;
 
-const buildHtml = (payload: OnboardingPayload) => `
+const buildHtml = (payload: OnboardingSubmissionPayload) => `
   <h1>Nueva solicitud de alta Zoco</h1>
   <h2>Datos básicos</h2>
   <ul>
@@ -105,7 +78,7 @@ const buildHtml = (payload: OnboardingPayload) => `
   </p>
 `;
 
-const buildText = (payload: OnboardingPayload) => `
+const buildText = (payload: OnboardingSubmissionPayload) => `
 Nueva solicitud de alta Zoco
 
 Tipo de persona: ${payload.personType === "PF" ? "Persona Física" : "Persona Jurídica"}
@@ -142,7 +115,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = JSON.parse(payloadRaw) as OnboardingPayload;
+    const payload = JSON.parse(payloadRaw) as OnboardingSubmissionPayload;
     let totalAttachmentBytes = 0;
     const attachments: {
       filename: string;
