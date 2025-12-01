@@ -126,5 +126,6 @@ export const modificationRequestSchema = z
     }
   });
 
-export type ModificationRequestValues = z.infer<typeof modificationRequestSchema>;
+export type ModificationRequestFormValues = z.input<typeof modificationRequestSchema>;
+export type ModificationRequestValues = z.output<typeof modificationRequestSchema>;
 export type ModificationType = (typeof modificationTypeValues)[number];

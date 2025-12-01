@@ -11,6 +11,7 @@ import { FileUploadItem } from "@/components/documents/FileUploadItem";
 import { TextField } from "@/components/fields/TextField";
 import { formatCuit, sanitizeCuitInput } from "@/lib/cuit";
 import {
+  type ModificationRequestFormValues,
   type ModificationRequestValues,
   type ModificationType,
   modificationRequestSchema,
@@ -41,7 +42,7 @@ const CHANGE_OPTIONS: {
 const ACCEPT_IMAGES_AND_PDF =
   "image/png,image/jpeg,image/jpg,application/pdf";
 
-const buildDefaultValues = (): ModificationRequestValues => ({
+const buildDefaultValues = (): ModificationRequestFormValues => ({
   cuit: "",
   fantasyName: "",
   contactEmail: "",
@@ -80,7 +81,11 @@ const ModificationPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentProofs, setPaymentProofs] = useState<File[]>([]);
 
-  const form = useForm<ModificationRequestValues>({
+  const form = useForm<
+    ModificationRequestFormValues,
+    undefined,
+    ModificationRequestValues
+  >({
     resolver: zodResolver(modificationRequestSchema),
     defaultValues: buildDefaultValues(),
   });
