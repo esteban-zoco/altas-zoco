@@ -10,7 +10,7 @@ const taxConditionValues = TAX_CONDITIONS.map(
 
 const taxConditionSchema = z.enum(taxConditionValues);
 
-const cuitSchema = z
+export const cuitSchema = z
   .string()
   .min(1, { message: "El CUIT es obligatorio" })
   .refine((value) => sanitizeCuitInput(value).length === 11, {
@@ -20,14 +20,14 @@ const cuitSchema = z
     message: "El CUIT no es válido",
   });
 
-const phoneSchema = z
+export const phoneSchema = z
   .string()
   .min(1, { message: "El celular es obligatorio" })
   .refine((value) => value.replace(/\D/g, "").length >= 8, {
     message: "Ingresá un número válido",
   });
 
-const bankIdentifierSchema = z
+export const bankIdentifierSchema = z
   .string()
   .min(4, { message: "Ingresá tu CBU, CVU o alias" })
   .refine((value) => {
@@ -36,7 +36,7 @@ const bankIdentifierSchema = z
     return numericOnly.length === 22;
   }, "Si ingresás un CBU/CVU debe tener 22 dígitos");
 
-const addressSchema = z.object({
+export const addressSchema = z.object({
   street: z.string().min(2, { message: "Ingresá la calle" }),
   number: z.string().min(1, { message: "Ingresá la altura" }),
   floor: z.string().optional(),

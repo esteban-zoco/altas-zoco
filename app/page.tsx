@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 
 import { ResumeDraftDialog } from "@/components/ResumeDraftDialog";
@@ -39,6 +40,12 @@ const OnboardingShell = () => (
           Te pedimos solo lo imprescindible para validar tu comercio según la
           normativa argentina. Podés guardar tu avance y seguir después.
         </p>
+        <Link
+          href="/modificaciones"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#B1C20E] underline-offset-4 hover:underline"
+        >
+          ¿Necesitás actualizar tus datos? Hacelo acá →
+        </Link>
       </header>
       <StepContent />
     </div>
