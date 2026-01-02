@@ -39,8 +39,7 @@ const CHANGE_OPTIONS: {
   },
 ] as const;
 
-const ACCEPT_IMAGES_AND_PDF =
-  "image/png,image/jpeg,image/jpg,application/pdf";
+const ACCEPT_IMAGES_AND_PDF = "image/*,application/pdf";
 
 const buildDefaultValues = (): ModificationRequestFormValues => ({
   cuit: "",
@@ -343,7 +342,7 @@ const ModificationPage = () => {
                 </label>
                 <FileUploadItem
                   title="Constancia del nuevo CBU/alias"
-                  description="Subí la captura o constancia emitida por tu banco. Formatos admitidos: JPG, PNG o PDF."
+                  description="Subí la captura o constancia emitida por tu banco. Formatos admitidos: imágenes o PDF."
                   accept={ACCEPT_IMAGES_AND_PDF}
                   allowMultiple
                   files={paymentProofs}

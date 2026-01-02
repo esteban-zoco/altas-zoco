@@ -12,8 +12,7 @@ import type {
   OnboardingSubmissionPayload,
 } from "@/types/onboarding";
 
-const ACCEPT_IMAGES_AND_PDF =
-  "image/png,image/jpeg,image/jpg,application/pdf";
+const ACCEPT_IMAGES_AND_PDF = "image/*,application/pdf";
 
 export const StepThree = () => {
   const {
@@ -29,6 +28,7 @@ export const StepThree = () => {
   const [savedToast, setSavedToast] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedTermsAt, setAcceptedTermsAt] = useState<string | null>(null);
 
   const naturalDocs = state.documents.natural;
   const legalDocs = state.documents.legal;
@@ -39,6 +39,11 @@ export const StepThree = () => {
     (lastDraftSavedAt
       ? `Último guardado: ${lastDraftSavedAt.toLocaleTimeString()}`
       : undefined);
+
+  const formatLocalDateTime = (date: Date) => {
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
 
   const updateNaturalFiles = (
     key: keyof NaturalPersonDocuments,
@@ -109,6 +114,9 @@ export const StepThree = () => {
         rentas: legalDocs.rentas.map((file) => file.name),
       },
     },
+    termsAcceptedAt:
+      acceptedTermsAt ??
+      (acceptedTerms ? formatLocalDateTime(new Date()) : undefined),
   });
 
   const buildFormData = (payload: OnboardingSubmissionPayload) => {
@@ -366,7 +374,13 @@ export const StepThree = () => {
             <input
               type="checkbox"
               checked={acceptedTerms}
-              onChange={(event) => setAcceptedTerms(event.target.checked)}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setAcceptedTerms(checked);
+                setAcceptedTermsAt(
+                  checked ? formatLocalDateTime(new Date()) : null,
+                );
+              }}
               className="h-4 w-4 rounded border-slate-300 text-[#B1C20E] focus:ring-[#B1C20E]"
             />
             Acepto la declaración jurada y los términos y condiciones.

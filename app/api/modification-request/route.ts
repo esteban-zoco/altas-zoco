@@ -12,9 +12,58 @@ const changeTypeLabels = {
   address: "Dirección comercial",
 } satisfies Record<ModificationRequestValues["changeTypes"][number], string>;
 
+interface SubmissionMeta {
+  ipAddress: string;
+  channel: string;
+  userAgent: string;
+}
+
 interface EmailContext {
   paymentProofNames: string[];
 }
+
+const getClientIp = (request: Request) => {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  return (
+    request.headers.get("x-real-ip") ??
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("true-client-ip") ??
+    "-"
+  );
+};
+
+const getUserAgent = (request: Request) =>
+  request.headers.get("user-agent") ?? "-";
+
+const buildMetadataHtml = (
+  payload: ModificationRequestValues,
+  meta: SubmissionMeta,
+) => `
+  <h2>Metadatos de la solicitud</h2>
+  <ul>
+    <li>Email declarado por el solicitante: ${payload.contactEmail || "-"}</li>
+    <li>IP de origen del formulario: ${meta.ipAddress || "-"}</li>
+    <li>Canal de envío: ${meta.channel}</li>
+    <li>User-Agent: ${meta.userAgent || "-"}</li>
+  </ul>
+`;
+
+const buildMetadataText = (
+  payload: ModificationRequestValues,
+  meta: SubmissionMeta,
+) => {
+  const lines = [
+    "Metadatos de la solicitud",
+    `Email declarado por el solicitante: ${payload.contactEmail || "-"}`,
+    `IP de origen del formulario: ${meta.ipAddress || "-"}`,
+    `Canal de envío: ${meta.channel}`,
+    `User-Agent: ${meta.userAgent || "-"}`,
+  ];
+  return lines.join("\n");
+};
 
 const formatAddress = (
   address: ModificationRequestValues["addressCurrent"],
@@ -216,12 +265,20 @@ export async function POST(request: Request) {
       auth: { user, pass },
     });
 
+    const submissionMeta: SubmissionMeta = {
+      ipAddress: getClientIp(request),
+      channel: "Formulario web - Brevo",
+      userAgent: getUserAgent(request),
+    };
+    const metadataText = buildMetadataText(payload, submissionMeta);
+    const metadataHtml = buildMetadataHtml(payload, submissionMeta);
+
     await transporter.sendMail({
       from: `Zoco Altas <${fromEmail}>`,
       to: "altas@zocoweb.com.ar",
       subject: `Modificación de datos - ${payload.fantasyName}`,
-      text: buildText(payload, { paymentProofNames }),
-      html: buildHtml(payload, { paymentProofNames }),
+      text: `${buildText(payload, { paymentProofNames })}\n\n${metadataText}`,
+      html: `${buildHtml(payload, { paymentProofNames })}${metadataHtml}`,
       attachments,
     });
 
@@ -234,3 +291,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

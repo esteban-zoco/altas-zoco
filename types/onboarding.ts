@@ -203,6 +203,7 @@ export interface OnboardingSubmissionPayload {
   naturalPersonData: NaturalPersonData;
   legalPersonData: LegalPersonData;
   documentsMeta: SubmissionDocumentsMeta;
+  termsAcceptedAt?: string;
 }
 
 export interface SubmittedOnboardingSummary {

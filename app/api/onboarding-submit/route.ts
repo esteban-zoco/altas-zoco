@@ -10,8 +10,70 @@ const buildAddress = (
     address.floor ? `, ${address.floor}` : ""
   } - ${address.city}, ${address.province} (${address.postalCode})`;
 
-const buildHtml = (payload: OnboardingSubmissionPayload) => `
+interface SubmissionMeta {
+  ipAddress: string;
+  channel: string;
+  termsAcceptedAt?: string;
+  userAgent: string;
+}
+
+const getClientIp = (request: Request) => {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  return (
+    request.headers.get("x-real-ip") ??
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("true-client-ip") ??
+    "-"
+  );
+};
+
+const getUserAgent = (request: Request) =>
+  request.headers.get("user-agent") ?? "-";
+
+const buildMetadataHtml = (
+  payload: OnboardingSubmissionPayload,
+  meta: SubmissionMeta,
+) => `
+  <h2>Metadatos de la solicitud</h2>
+  <ul>
+    <li>Email declarado por el solicitante: ${payload.basicData.contactEmail || "-"}</li>
+    ${
+      meta.termsAcceptedAt
+        ? `<li>Fecha y hora de aceptación de TyC: ${meta.termsAcceptedAt}</li>`
+        : ""
+    }
+    <li>IP de origen del formulario: ${meta.ipAddress || "-"}</li>
+    <li>Canal de envío: ${meta.channel}</li>
+    <li>User-Agent: ${meta.userAgent || "-"}</li>
+  </ul>
+`;
+
+const buildMetadataText = (
+  payload: OnboardingSubmissionPayload,
+  meta: SubmissionMeta,
+) => {
+  const lines = [
+    "Metadatos de la solicitud",
+    `Email declarado por el solicitante: ${payload.basicData.contactEmail || "-"}`,
+  ];
+  if (meta.termsAcceptedAt) {
+    lines.push(`Fecha y hora de aceptación de TyC: ${meta.termsAcceptedAt}`);
+  }
+  lines.push(`IP de origen del formulario: ${meta.ipAddress || "-"}`);
+  lines.push(`Canal de envío: ${meta.channel}`);
+  lines.push(`User-Agent: ${meta.userAgent || "-"}`);
+  return lines.join("\n");
+};
+
+const buildHtml = (
+  payload: OnboardingSubmissionPayload,
+  meta: SubmissionMeta,
+) => `
   <h1>Nueva solicitud de alta Zoco</h1>
+  ${buildMetadataHtml(payload, meta)}
   <h2>Datos básicos</h2>
   <ul>
     <li>Tipo de persona: ${
@@ -78,8 +140,13 @@ const buildHtml = (payload: OnboardingSubmissionPayload) => `
   </p>
 `;
 
-const buildText = (payload: OnboardingSubmissionPayload) => `
+const buildText = (
+  payload: OnboardingSubmissionPayload,
+  meta: SubmissionMeta,
+) => `
 Nueva solicitud de alta Zoco
+
+${buildMetadataText(payload, meta)}
 
 Tipo de persona: ${payload.personType === "PF" ? "Persona Física" : "Persona Jurídica"}
 Nombre de fantasía: ${payload.basicData.fantasyName}
@@ -170,12 +237,19 @@ export async function POST(request: Request) {
       auth: { user, pass },
     });
 
+    const submissionMeta: SubmissionMeta = {
+      ipAddress: getClientIp(request),
+      channel: "Formulario web - Brevo",
+      termsAcceptedAt: payload.termsAcceptedAt,
+      userAgent: getUserAgent(request),
+    };
+
     await transporter.sendMail({
       from: `Onboarding Zoco <${fromEmail}>`,
       to: "altas@zocoweb.com.ar",
       subject: `Alta - ${payload.basicData.fantasyName || "Nuevo comercio"}`,
-      text: buildText(payload),
-      html: buildHtml(payload),
+      text: buildText(payload, submissionMeta),
+      html: buildHtml(payload, submissionMeta),
       attachments,
     });
 
@@ -188,3 +262,4 @@ export async function POST(request: Request) {
     );
   }
 }
+
