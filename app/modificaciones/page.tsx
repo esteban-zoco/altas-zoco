@@ -39,7 +39,34 @@ const CHANGE_OPTIONS: {
   },
 ] as const;
 
-const ACCEPT_IMAGES_AND_PDF = "image/*,application/pdf";
+const ACCEPT_ANY_FILE = "*/*";
+
+const normalizeExtension = (value: string) => {
+  const cleaned = value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!cleaned) return "";
+  if (cleaned === "jpeg" || cleaned === "pjpeg") return "jpg";
+  return cleaned;
+};
+
+const getFileExtension = (file: File) => {
+  const trimmedName = file.name?.trim();
+  if (trimmedName && trimmedName.includes(".")) {
+    const ext = trimmedName.split(".").pop() ?? "";
+    const normalized = normalizeExtension(ext);
+    if (normalized) return normalized;
+  }
+  if (file.type) {
+    const typeExt = file.type.split("/")[1] ?? "";
+    const normalized = normalizeExtension(typeExt);
+    if (normalized) return normalized;
+  }
+  return file.type?.startsWith("image/") ? "jpg" : "bin";
+};
+
+const buildSafeFileName = (base: string, file: File, index: number) => {
+  const extension = getFileExtension(file);
+  return `${base}-${index + 1}.${extension}`;
+};
 
 const buildDefaultValues = (): ModificationRequestFormValues => ({
   cuit: "",
@@ -119,7 +146,7 @@ const ModificationPage = () => {
           formData.append(
             "paymentProofs",
             file,
-            file.name || `constancia-cbu-${index + 1}.pdf`,
+            buildSafeFileName("constancia-cbu", file, index),
           ),
         );
       }
@@ -342,8 +369,8 @@ const ModificationPage = () => {
                 </label>
                 <FileUploadItem
                   title="Constancia del nuevo CBU/alias"
-                  description="Subí la captura o constancia emitida por tu banco. Formatos admitidos: imágenes o PDF."
-                  accept={ACCEPT_IMAGES_AND_PDF}
+                  description="Subi la captura o constancia emitida por tu banco. Se aceptan archivos en cualquier formato."
+                  accept={ACCEPT_ANY_FILE}
                   allowMultiple
                   files={paymentProofs}
                   onFilesChange={setPaymentProofs}
@@ -467,3 +494,4 @@ const ModificationPage = () => {
 };
 
 export default ModificationPage;
+

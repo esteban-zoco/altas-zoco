@@ -12,7 +12,7 @@ import type {
   OnboardingSubmissionPayload,
 } from "@/types/onboarding";
 
-const ACCEPT_IMAGES_AND_PDF = "image/*,application/pdf";
+const ACCEPT_ANY_FILE = "*/*";
 
 export const StepThree = () => {
   const {
@@ -43,6 +43,33 @@ export const StepThree = () => {
   const formatLocalDateTime = (date: Date) => {
     const pad = (value: number) => String(value).padStart(2, "0");
     return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const normalizeExtension = (value: string) => {
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!cleaned) return "";
+    if (cleaned === "jpeg" || cleaned === "pjpeg") return "jpg";
+    return cleaned;
+  };
+
+  const getFileExtension = (file: File) => {
+    const trimmedName = file.name?.trim();
+    if (trimmedName && trimmedName.includes(".")) {
+      const ext = trimmedName.split(".").pop() ?? "";
+      const normalized = normalizeExtension(ext);
+      if (normalized) return normalized;
+    }
+    if (file.type) {
+      const typeExt = file.type.split("/")[1] ?? "";
+      const normalized = normalizeExtension(typeExt);
+      if (normalized) return normalized;
+    }
+    return file.type?.startsWith("image/") ? "jpg" : "bin";
+  };
+
+  const buildSafeFileName = (base: string, file: File, index: number) => {
+    const extension = getFileExtension(file);
+    return `${base}-${index + 1}.${extension}`;
   };
 
   const updateNaturalFiles = (
@@ -88,101 +115,167 @@ export const StepThree = () => {
     return missing;
   };
 
-  const buildSubmissionPayload = (): OnboardingSubmissionPayload => ({
+  const buildDocumentNames = (): OnboardingSubmissionPayload["documentsMeta"] => ({
+    natural: {
+      dniFront: naturalDocs.dniFront.map((file, index) =>
+        buildSafeFileName("dni-frente", file, index),
+      ),
+      dniBack: naturalDocs.dniBack.map((file, index) =>
+        buildSafeFileName("dni-dorso", file, index),
+      ),
+      cbu: naturalDocs.cbu.map((file, index) =>
+        buildSafeFileName("cbu", file, index),
+      ),
+      afip: naturalDocs.afip.map((file, index) =>
+        buildSafeFileName("afip", file, index),
+      ),
+      rentas: naturalDocs.rentas.map((file, index) =>
+        buildSafeFileName("rentas", file, index),
+      ),
+    },
+    legal: {
+      dniRepresentativeFront: legalDocs.dniRepresentativeFront.map(
+        (file, index) => buildSafeFileName("dni-representante-frente", file, index),
+      ),
+      dniRepresentativeBack: legalDocs.dniRepresentativeBack.map(
+        (file, index) => buildSafeFileName("dni-representante-dorso", file, index),
+      ),
+      companyCuit: legalDocs.companyCuit.map((file, index) =>
+        buildSafeFileName("cuit", file, index),
+      ),
+      companyCbu: legalDocs.companyCbu.map((file, index) =>
+        buildSafeFileName("cbu", file, index),
+      ),
+      bylaws: legalDocs.bylaws.map((file, index) =>
+        buildSafeFileName("contrato", file, index),
+      ),
+      rentas: legalDocs.rentas.map((file, index) =>
+        buildSafeFileName("rentas", file, index),
+      ),
+    },
+  });
+
+  const buildSubmissionPayload = (
+    documentNames: OnboardingSubmissionPayload["documentsMeta"],
+  ): OnboardingSubmissionPayload => ({
     personType: state.personType,
     basicData: state.basicData,
     naturalPersonData: state.naturalPersonData,
     legalPersonData: state.legalPersonData,
-    documentsMeta: {
-      natural: {
-        dniFront: naturalDocs.dniFront.map((file) => file.name),
-        dniBack: naturalDocs.dniBack.map((file) => file.name),
-        cbu: naturalDocs.cbu.map((file) => file.name),
-        afip: naturalDocs.afip.map((file) => file.name),
-        rentas: naturalDocs.rentas.map((file) => file.name),
-      },
-      legal: {
-        dniRepresentativeFront: legalDocs.dniRepresentativeFront.map(
-          (file) => file.name,
-        ),
-        dniRepresentativeBack: legalDocs.dniRepresentativeBack.map(
-          (file) => file.name,
-        ),
-        companyCuit: legalDocs.companyCuit.map((file) => file.name),
-        companyCbu: legalDocs.companyCbu.map((file) => file.name),
-        bylaws: legalDocs.bylaws.map((file) => file.name),
-        rentas: legalDocs.rentas.map((file) => file.name),
-      },
-    },
+    documentsMeta: documentNames,
     termsAcceptedAt:
       acceptedTermsAt ??
       (acceptedTerms ? formatLocalDateTime(new Date()) : undefined),
   });
 
-  const buildFormData = (payload: OnboardingSubmissionPayload) => {
+  const buildFormData = (
+    payload: OnboardingSubmissionPayload,
+    documentNames: OnboardingSubmissionPayload["documentsMeta"],
+  ) => {
     const formData = new FormData();
     formData.append("payload", JSON.stringify(payload));
 
     naturalDocs.dniFront.forEach((file, index) =>
-      formData.append("pf_dni_front", file, file.name || `dni-frente-${index}.pdf`),
+      formData.append(
+        "pf_dni_front",
+        file,
+        documentNames.natural.dniFront[index] ??
+          buildSafeFileName("dni-frente", file, index),
+      ),
     );
     naturalDocs.dniBack.forEach((file, index) =>
-      formData.append("pf_dni_back", file, file.name || `dni-dorso-${index}.pdf`),
+      formData.append(
+        "pf_dni_back",
+        file,
+        documentNames.natural.dniBack[index] ??
+          buildSafeFileName("dni-dorso", file, index),
+      ),
     );
     naturalDocs.cbu.forEach((file, index) =>
-      formData.append("pf_cbu", file, file.name || `cbu-${index}.pdf`),
+      formData.append(
+        "pf_cbu",
+        file,
+        documentNames.natural.cbu[index] ??
+          buildSafeFileName("cbu", file, index),
+      ),
     );
     naturalDocs.afip.forEach((file, index) =>
-      formData.append("pf_afip", file, file.name || `afip-${index}.pdf`),
+      formData.append(
+        "pf_afip",
+        file,
+        documentNames.natural.afip[index] ??
+          buildSafeFileName("afip", file, index),
+      ),
     );
     naturalDocs.rentas.forEach((file, index) =>
-      formData.append("pf_rentas", file, file.name || `rentas-${index}.pdf`),
+      formData.append(
+        "pf_rentas",
+        file,
+        documentNames.natural.rentas[index] ??
+          buildSafeFileName("rentas", file, index),
+      ),
     );
 
     legalDocs.dniRepresentativeFront.forEach((file, index) =>
       formData.append(
         "pj_dni_representante_front",
         file,
-        file.name || `dni-representante-frente-${index}.pdf`,
+        documentNames.legal.dniRepresentativeFront[index] ??
+          buildSafeFileName("dni-representante-frente", file, index),
       ),
     );
     legalDocs.dniRepresentativeBack.forEach((file, index) =>
       formData.append(
         "pj_dni_representante_back",
         file,
-        file.name || `dni-representante-dorso-${index}.pdf`,
+        documentNames.legal.dniRepresentativeBack[index] ??
+          buildSafeFileName("dni-representante-dorso", file, index),
       ),
     );
     legalDocs.companyCuit.forEach((file, index) =>
       formData.append(
         "pj_cuit",
         file,
-        file.name || `cuit-${index}.pdf`,
+        documentNames.legal.companyCuit[index] ??
+          buildSafeFileName("cuit", file, index),
       ),
     );
     legalDocs.companyCbu.forEach((file, index) =>
       formData.append(
         "pj_cbu",
         file,
-        file.name || `cbu-${index}.pdf`,
+        documentNames.legal.companyCbu[index] ??
+          buildSafeFileName("cbu", file, index),
       ),
     );
     legalDocs.bylaws.forEach((file, index) =>
       formData.append(
         "pj_contrato",
         file,
-        file.name || `contrato-${index}.pdf`,
+        documentNames.legal.bylaws[index] ??
+          buildSafeFileName("contrato", file, index),
       ),
     );
     legalDocs.rentas.forEach((file, index) =>
       formData.append(
         "pj_rentas",
         file,
-        file.name || `rentas-${index}.pdf`,
+        documentNames.legal.rentas[index] ??
+          buildSafeFileName("rentas", file, index),
       ),
     );
 
     return formData;
+  };
+
+  const getSubmitErrorMessage = (error: unknown) => {
+    if (error instanceof Error) {
+      if (error.message === "Failed to fetch") {
+        return "No pudimos conectar con el servidor. Reintenta en unos minutos.";
+      }
+      return error.message;
+    }
+    return "Hubo un problema al enviar tu solicitud. Reintenta en unos minutos.";
   };
 
   const handleFinalSubmit = async () => {
@@ -205,8 +298,9 @@ export const StepThree = () => {
 
     setIsSubmitting(true);
     try {
-      const payload = buildSubmissionPayload();
-      const body = buildFormData(payload);
+      const documentNames = buildDocumentNames();
+      const payload = buildSubmissionPayload(documentNames);
+      const body = buildFormData(payload, documentNames);
       const response = await fetch("/api/onboarding-submit", {
         method: "POST",
         body,
@@ -218,18 +312,7 @@ export const StepThree = () => {
       markComplete(payload);
     } catch (error) {
       console.error("Error enviando solicitud", error);
-      if (
-        error instanceof Error &&
-        error.message.includes("tamaño máximo (20MB)")
-      ) {
-        setErrorMessage(
-          "La documentación supera el tamaño máximo (20MB). Reducí los archivos y volvé a intentar.",
-        );
-      } else {
-        setErrorMessage(
-          "Hubo un problema al enviar tu solicitud. Por favor volvé a intentar en unos minutos.",
-        );
-      }
+      setErrorMessage(getSubmitErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -245,7 +328,7 @@ export const StepThree = () => {
     <div className="space-y-6">
       <Alert
         title="Subí estos documentos para que podamos activar tu cuenta en Zoco."
-        description="Podés cargar imágenes o PDFs. Si necesitás tiempo, guardá tu progreso y seguí después."
+        description="Podes cargar archivos en cualquier formato. Si necesitas tiempo, guarda tu progreso y segui despues."
       />
       <StepLayout
         step={3}
@@ -268,35 +351,35 @@ export const StepThree = () => {
               <FileUploadItem
                 title="DNI frente"
                 description="Subí la cara frontal del DNI."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={naturalDocs.dniFront}
                 onFilesChange={(files) => updateNaturalFiles("dniFront", files)}
               />
               <FileUploadItem
                 title="DNI dorso"
                 description="Subí la cara trasera del DNI."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={naturalDocs.dniBack}
                 onFilesChange={(files) => updateNaturalFiles("dniBack", files)}
               />
               <FileUploadItem
                 title="Constancia / captura de CBU"
                 description="Debe verse claramente tu nombre y el CBU/CVU."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={naturalDocs.cbu}
                 onFilesChange={(files) => updateNaturalFiles("cbu", files)}
               />
               <FileUploadItem
                 title="Constancia AFIP / ARCA"
                 description="Subi una constancia vigente emitida por AFIP o ARCA."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={naturalDocs.afip}
                 onFilesChange={(files) => updateNaturalFiles("afip", files)}
               />
               <FileUploadItem
                 title="Constancia de Rentas"
                 description="Adjuntá la constancia provincial vigente del comercio."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={naturalDocs.rentas}
                 onFilesChange={(files) => updateNaturalFiles("rentas", files)}
               />
@@ -305,7 +388,7 @@ export const StepThree = () => {
             <>
               <FileUploadItem
                 title="DNI (frente) del representante legal / persona autorizada"
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={legalDocs.dniRepresentativeFront}
                 onFilesChange={(files) =>
                   updateLegalFiles("dniRepresentativeFront", files)
@@ -313,7 +396,7 @@ export const StepThree = () => {
               />
               <FileUploadItem
                 title="DNI (dorso) del representante legal / persona autorizada"
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={legalDocs.dniRepresentativeBack}
                 onFilesChange={(files) =>
                   updateLegalFiles("dniRepresentativeBack", files)
@@ -321,20 +404,20 @@ export const StepThree = () => {
               />
               <FileUploadItem
                 title="Constancia de CUIT de la sociedad (ARCA)"
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={legalDocs.companyCuit}
                 onFilesChange={(files) => updateLegalFiles("companyCuit", files)}
               />
               <FileUploadItem
                 title="Constancia / captura de CBU de la sociedad"
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={legalDocs.companyCbu}
                 onFilesChange={(files) => updateLegalFiles("companyCbu", files)}
               />
               <FileUploadItem
                 title="Contrato social / estatuto"
-                description="Podés subir uno o varios archivos (PDF o imágenes)."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                description="Podes subir uno o varios archivos."
+                accept={ACCEPT_ANY_FILE}
                 allowMultiple
                 files={legalDocs.bylaws}
                 onFilesChange={(files) => updateLegalFiles("bylaws", files)}
@@ -342,7 +425,7 @@ export const StepThree = () => {
               <FileUploadItem
                 title="Constancia de Rentas de la sociedad"
                 description="Subí la constancia provincial obligatoria."
-                accept={ACCEPT_IMAGES_AND_PDF}
+                accept={ACCEPT_ANY_FILE}
                 files={legalDocs.rentas}
                 onFilesChange={(files) => updateLegalFiles("rentas", files)}
               />
@@ -397,3 +480,7 @@ export const StepThree = () => {
     </div>
   );
 };
+
+
+
+
