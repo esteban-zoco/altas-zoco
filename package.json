@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest"
   },
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",
@@ -14,8 +15,11 @@
     "clsx": "^2.1.1",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.554.0",
+    "mongodb": "^6.19.0",
     "next": "16.0.10",
     "nodemailer": "^7.0.10",
+    "papaparse": "^5.5.2",
+    "pdf-parse": "^1.1.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.66.1",
@@ -25,11 +29,14 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.4",
+    "@types/papaparse": "^5.3.16",
+    "@types/pdf-parse": "^1.1.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

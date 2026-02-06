@@ -1,0 +1,272 @@
+[
+  {
+    "id": "f3fb15d7-0103-4a31-9997-c57c24b70f85",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T13:44:45.637Z",
+    "rowCount": 9
+  },
+  {
+    "id": "715ba05e-48f2-4ba3-847a-0df49616e018",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T13:44:48.566Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "acbe96c8-184d-4edc-ae30-849d69a67672",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:02:59.181Z",
+    "rowCount": 9
+  },
+  {
+    "id": "ec51226c-aa48-47d2-9593-338fb93b57b8",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T14:03:04.857Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "acbd5d7c-b2a4-415a-a22a-4812ca1afd43",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:15:54.852Z",
+    "rowCount": 9
+  },
+  {
+    "id": "cb0d4337-4718-48d5-b6f6-e367adfe8cb1",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:15:59.850Z",
+    "rowCount": 9
+  },
+  {
+    "id": "848a9fc2-7b33-4002-a316-0f5f2cee34ef",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T14:16:02.665Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "a3d86fe6-c885-4638-b907-3e2a2e449cd7",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:31:48.063Z",
+    "rowCount": 9
+  },
+  {
+    "id": "eab3434b-8f01-4433-b05b-cf0f4480d6a0",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T14:32:20.027Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "ef626384-a29e-49ee-98ef-c53e1d3aeba8",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:39:48.634Z",
+    "rowCount": 9
+  },
+  {
+    "id": "2e86d30f-155d-40ab-8203-2453cb6d1471",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T14:39:54.988Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "484b8015-5c35-4742-9623-c3e3301221e8",
+    "type": "csv",
+    "filename": "rpt177012980256759307167997660.csv",
+    "createdAt": "2026-02-03T14:44:07.880Z",
+    "rowCount": 13
+  },
+  {
+    "id": "3046d90a-419a-496c-b305-2b09f61a77fd",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1064430-32058464-VisaCr_dito-20260203.pdf",
+    "createdAt": "2026-02-03T14:44:14.061Z",
+    "rowCount": 1,
+    "totalAmount": null
+  },
+  {
+    "id": "27ca36b8-66d7-459e-9f91-7b5db190367e",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1064430-32058464-VisaCr_dito-20260203.pdf",
+    "createdAt": "2026-02-03T14:45:21.139Z",
+    "rowCount": 1,
+    "totalAmount": null
+  },
+  {
+    "id": "220941b5-26d1-4910-ac88-b90508c333ed",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T14:45:28.384Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "f99999b0-7c49-473e-bc3e-9184b67391ec",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T14:45:31.553Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "27d799a8-41e0-4363-a5dc-a3b66b6cfa11",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:45:32.364Z",
+    "rowCount": 9
+  },
+  {
+    "id": "afe5b09a-64d5-44e5-b1fb-dd1f652f4fc1",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:55:25.964Z",
+    "rowCount": 9
+  },
+  {
+    "id": "19049c7c-55f5-4306-a2da-cca5ffb8c525",
+    "type": "csv",
+    "filename": "rpt177012207905959307167997661.csv",
+    "createdAt": "2026-02-03T14:55:30.866Z",
+    "rowCount": 9
+  },
+  {
+    "id": "221d306b-e5b4-4a3f-b90e-afbeea659b16",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1064430-32058464-VisaCr_dito-20260203.pdf",
+    "createdAt": "2026-02-03T14:55:42.523Z",
+    "rowCount": 1,
+    "totalAmount": null
+  },
+  {
+    "id": "74f7eac9-30bc-4244-a2a5-2b2bbbd7d62c",
+    "type": "csv",
+    "filename": "rpt177012980256759307167997660.csv",
+    "createdAt": "2026-02-03T14:55:43.469Z",
+    "rowCount": 13
+  },
+  {
+    "id": "0e2d6b72-f54c-4870-8add-3f6f3de9a3b6",
+    "type": "csv",
+    "filename": "rpt177013435260659307167997661.csv",
+    "createdAt": "2026-02-03T16:02:39.625Z",
+    "rowCount": 10
+  },
+  {
+    "id": "2523359f-abc7-46d8-a8e9-48ac7c8f30fb",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T16:02:42.510Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "c0544bbc-0434-4bcc-8862-5a2c51c498ed",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T16:10:09.137Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "5dd954d4-15d1-4d5a-8bc2-0010430cc590",
+    "type": "csv",
+    "filename": "rpt177013435260659307167997661.csv",
+    "createdAt": "2026-02-03T16:22:46.629Z",
+    "rowCount": 10
+  },
+  {
+    "id": "c9868730-e5b2-4e0f-9d90-e16ecdd4a975",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T16:22:49.249Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "b7fb3c91-8ce7-4b78-a3cb-f951f091db65",
+    "type": "csv",
+    "filename": "rpt177013435260659307167997661.csv",
+    "createdAt": "2026-02-03T16:40:50.461Z",
+    "rowCount": 10
+  },
+  {
+    "id": "44804097-cde0-4634-a49e-de6546eda431",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T16:40:53.238Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "d4fc4e72-c1dd-4a4e-af70-4afa02061648",
+    "type": "csv",
+    "filename": "rpt177013435260659307167997661.csv",
+    "createdAt": "2026-02-03T16:41:33.928Z",
+    "rowCount": 10
+  },
+  {
+    "id": "b372f6e4-ed15-4950-bd35-5177648bd48b",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T16:41:39.325Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "eb7262f0-2aa4-4bd8-90e3-e1ee68d28fca",
+    "type": "csv",
+    "filename": "rpt177012980256759307167997660.csv",
+    "createdAt": "2026-02-03T16:41:45.633Z",
+    "rowCount": 13
+  },
+  {
+    "id": "eada8940-d9a8-411e-9296-20c95e74f75c",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1064430-32058464-VisaCr_dito-20260203.pdf",
+    "createdAt": "2026-02-03T16:41:46.479Z",
+    "rowCount": 1,
+    "totalAmount": null
+  },
+  {
+    "id": "08b8f8b2-d8d0-4414-8e52-544507e23144",
+    "type": "csv",
+    "filename": "rpt177013435260659307167997661.csv",
+    "createdAt": "2026-02-03T18:43:13.246Z",
+    "rowCount": 10
+  },
+  {
+    "id": "10bfc6b7-b528-45a6-89b2-c9f7e7b037ca",
+    "type": "csv",
+    "filename": "rpt177013435260659307167997661.csv",
+    "createdAt": "2026-02-03T18:43:14.840Z",
+    "rowCount": 10
+  },
+  {
+    "id": "1370feaf-797b-4ce0-ab7b-d46ec49960ba",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T18:43:15.926Z",
+    "rowCount": 2,
+    "totalAmount": null
+  },
+  {
+    "id": "afc40e6e-7360-4331-a609-a0ef11fae57b",
+    "type": "pdf",
+    "filename": "LiquidacionDiaria-1063838-32058464-MastercardCr_dito-20260202.pdf",
+    "createdAt": "2026-02-03T18:43:16.445Z",
+    "rowCount": 2,
+    "totalAmount": null
+  }
+]
