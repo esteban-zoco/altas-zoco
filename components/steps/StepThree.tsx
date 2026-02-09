@@ -444,7 +444,7 @@ export const StepThree = () => {
             la información ingresada es veraz y exacta. Además acepta las bases
             y condiciones del contrato de ZOCO S.A.S. disponibles en{" "}
             <a
-              href="https://zocoweb.com.ar/static/media/Terminos.fba6256b8d063a5f895d.pdf"
+              href="https://zocopagos.com/terminos-y-condiciones/"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-[#B1C20E]"

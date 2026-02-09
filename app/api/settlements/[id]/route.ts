@@ -14,6 +14,62 @@ import {
 export const runtime = "nodejs";
 
 const isObjectId = (value: string) => ObjectId.isValid(value);
+const CUOTA_TOKEN_REGEX = /\b(\d{1,2})\/(\d{1,2})\b(?!\/\d{4})/g;
+
+const extractCuotaInfo = (line: SettlementLineDoc | undefined) => {
+  if (!line) {
+    return {
+      cuotaNumero: null,
+      cuotaTotal: null,
+      planCuota: null,
+      isInstallment: false,
+    };
+  }
+
+  if (line.cuotaTotal && line.cuotaTotal > 1) {
+    return {
+      cuotaNumero: line.cuotaNumero ?? null,
+      cuotaTotal: line.cuotaTotal ?? null,
+      planCuota: line.planCuota ?? null,
+      isInstallment: true,
+    };
+  }
+
+  const raw = line.rawLine ?? "";
+  CUOTA_TOKEN_REGEX.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let best:
+    | { numero: number; total: number; token: string; score: number }
+    | null = null;
+  while ((match = CUOTA_TOKEN_REGEX.exec(raw)) !== null) {
+    const numero = Number(match[1]);
+    const total = Number(match[2]);
+    if (!Number.isFinite(numero) || !Number.isFinite(total)) continue;
+    if (total <= 1 || total > 60) continue;
+    if (numero < 0 || numero > total) continue;
+    const score = total * 100 + (60 - Math.abs(numero - 1));
+    if (!best || score > best.score) {
+      best = { numero, total, token: match[0], score };
+    }
+  }
+
+  if (!best) {
+    return {
+      cuotaNumero: null,
+      cuotaTotal: null,
+      planCuota: line.planCuota ?? null,
+      isInstallment:
+        line.trxType === "plan_cuota" || /plan\s*cuota/i.test(raw),
+    };
+  }
+
+  return {
+    cuotaNumero: best.numero,
+    cuotaTotal: best.total,
+    planCuota: line.planCuota ?? best.token,
+    isInstallment: true,
+  };
+};
 
 export async function GET(
   _request: Request,
@@ -90,11 +146,37 @@ export async function GET(
       createdBy: settlement.createdBy,
     };
 
-    const responseReconciliations = reconciliations.map((item) => ({
-      id: toId(item._id),
-      settlementId: toId(item.settlementId),
-      settlementLineId: toId(item.settlementLineId),
-      fiservTransactionId: item.fiservTransactionId ? toId(item.fiservTransactionId) : null,
+    const lineById = new Map(
+      lines.map((line) => [line._id.toString(), line]),
+    );
+
+    const responseReconciliations = reconciliations.map((item) => {
+      const line = lineById.get(item.settlementLineId.toString());
+      const cuotaInfo = extractCuotaInfo(line);
+      const pdfAmountCents = line?.amountCents ?? null;
+      let cuotaTotal = cuotaInfo.cuotaTotal;
+      let cuotaNumero = cuotaInfo.cuotaNumero;
+      let isInstallment = cuotaInfo.isInstallment;
+
+      if (
+        !cuotaTotal &&
+        pdfAmountCents &&
+        item.amountCents &&
+        item.amountCents > pdfAmountCents
+      ) {
+        const ratio = item.amountCents / pdfAmountCents;
+        if (Number.isInteger(ratio) && ratio > 1 && ratio <= 60) {
+          cuotaTotal = ratio;
+          cuotaNumero = cuotaNumero ?? null;
+          isInstallment = true;
+        }
+      }
+
+      return {
+        id: toId(item._id),
+        settlementId: toId(item.settlementId),
+        settlementLineId: toId(item.settlementLineId),
+        fiservTransactionId: item.fiservTransactionId ? toId(item.fiservTransactionId) : null,
       orderId: item.orderId ?? null,
       organizerId: item.organizerId ?? null,
       organizerName: item.organizerName ?? null,
@@ -109,8 +191,17 @@ export async function GET(
       opDate: item.opDate,
       last4: item.last4,
       cupon: item.cupon ?? null,
+      trxType: line?.trxType ?? null,
+      planCuota: cuotaInfo.planCuota,
+      cuotaNumero,
+      cuotaTotal,
+      pdfAmountCents,
+      isInstallment,
+      terminal: line?.terminal ?? null,
+      lote: line?.lote ?? null,
       createdAt: toIso(item.createdAt),
-    }));
+      };
+    });
 
     return NextResponse.json({
       success: true,

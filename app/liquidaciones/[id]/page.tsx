@@ -51,6 +51,7 @@ export default function LiquidacionDetallePage() {
   const [operator, setOperator] = useState("");
   const [reconciling, setReconciling] = useState(false);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [detailExpandedKeys, setDetailExpandedKeys] = useState<Set<string>>(new Set());
 
   const loadDetail = useCallback(async () => {
     if (!settlementId) return;
@@ -109,6 +110,8 @@ export default function LiquidacionDetallePage() {
   const buildGroupKey = (item: any) =>
     `${item.opDate}|${item.last4}|${item.cupon ?? ""}`;
 
+  const buildDetailKey = (item: any) => `${item.id}`;
+
   const excludedGroups = useMemo(() => {
     const map = new Map<string, any[]>();
     for (const item of reconciliations) {
@@ -133,6 +136,39 @@ export default function LiquidacionDetallePage() {
       else next.add(key);
       return next;
     });
+  };
+
+  const toggleDetail = (key: string) => {
+    setDetailExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const formatCuotaLabel = (numero?: number | null, total?: number | null) => {
+    if (!total || total <= 0) return "";
+    if (!numero || numero <= 0) return `${total}`;
+    return `${numero}/${total}`;
+  };
+
+  const getInstallmentDetails = (item: any, grouped: any[]) => {
+    const all = [item, ...grouped];
+    const cuotaTotal =
+      item.cuotaTotal ??
+      all.find((line) => typeof line.cuotaTotal === "number")?.cuotaTotal ??
+      null;
+    const cuotas = all
+      .filter((line) => typeof line.cuotaNumero === "number" && line.cuotaNumero > 0)
+      .map((line) => ({
+        numero: line.cuotaNumero as number,
+        total: (line.cuotaTotal ?? cuotaTotal) as number | null,
+        amountCents: line.amountCents ?? null,
+      }))
+      .sort((a, b) => a.numero - b.numero);
+
+    return { cuotaTotal, cuotas };
   };
 
   return (
@@ -310,6 +346,14 @@ export default function LiquidacionDetallePage() {
                   const groupKey = buildGroupKey(item);
                   const grouped = excludedGroups.get(groupKey) ?? [];
                   const isExpanded = expandedKeys.has(groupKey);
+                  const detailKey = buildDetailKey(item);
+                  const detailExpanded = detailExpandedKeys.has(detailKey);
+                  const installmentDetails = getInstallmentDetails(item, grouped);
+                  const cuotaLabel = formatCuotaLabel(
+                    item.cuotaNumero,
+                    item.cuotaTotal,
+                  );
+                  const shouldShowDetailButton = Boolean(item.isInstallment);
 
                   return (
                     <>
@@ -329,6 +373,15 @@ export default function LiquidacionDetallePage() {
                           </span>
                           {item.reason ? (
                             <p className="mt-1 text-xs text-slate-400">{item.reason}</p>
+                          ) : null}
+                          {shouldShowDetailButton ? (
+                            <button
+                              type="button"
+                              onClick={() => toggleDetail(detailKey)}
+                              className="mt-2 text-xs font-semibold text-slate-600 hover:text-slate-900"
+                            >
+                              {detailExpanded ? "Ocultar detalles" : "Ver detalles"}
+                            </button>
                           ) : null}
                           {grouped.length > 0 ? (
                             <button
@@ -373,6 +426,61 @@ export default function LiquidacionDetallePage() {
                           {item.organizerName ?? "-"}
                         </td>
                       </tr>
+                      {detailExpanded ? (
+                        <tr className="border-b border-slate-100 bg-slate-50">
+                          <td className="px-4 py-3 text-slate-500" colSpan={7}>
+                            <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+                              <div>
+                                <span className="font-semibold text-slate-600">
+                                  Cuotas:
+                                </span>{" "}
+                                {cuotaLabel || installmentDetails.cuotaTotal
+                                  ? cuotaLabel || `${installmentDetails.cuotaTotal}`
+                                  : "Sin datos"}
+                              </div>
+                              <div>
+                                <span className="font-semibold text-slate-600">
+                                  Monto cuota:
+                                </span>{" "}
+                                {item.pdfAmountCents
+                                  ? formatAmount(item.pdfAmountCents / 100)
+                                  : "Sin datos"}
+                              </div>
+                              <div>
+                                <span className="font-semibold text-slate-600">
+                                  Plan:
+                                </span>{" "}
+                                {item.planCuota ?? "-"}
+                              </div>
+                              <div>
+                                <span className="font-semibold text-slate-600">
+                                  Terminal/Lote:
+                                </span>{" "}
+                                {item.terminal ?? "-"} / {item.lote ?? "-"}
+                              </div>
+                            </div>
+                            {installmentDetails.cuotas.length ? (
+                              <div className="mt-2 text-xs text-slate-500">
+                                <span className="font-semibold text-slate-600">
+                                  Detalle cuotas:
+                                </span>{" "}
+                                {installmentDetails.cuotas
+                                  .map((cuota) => {
+                                    const label = formatCuotaLabel(
+                                      cuota.numero,
+                                      cuota.total,
+                                    );
+                                    const amount = cuota.amountCents
+                                      ? formatAmount(cuota.amountCents / 100)
+                                      : null;
+                                    return amount ? `${label} (${amount})` : label;
+                                  })
+                                  .join(" · ")}
+                              </div>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ) : null}
                       {isExpanded
                         ? grouped.map((detail) => (
                             <tr
