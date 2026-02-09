@@ -53,15 +53,16 @@ const refineMatches = (
   matches: CsvTransaction[],
 ): CsvTransaction[] => {
   let refined = matches;
-  const refiners: Array<"terminal" | "lote" | "cupon"> = ["terminal", "lote", "cupon"];
+  type RefinerKey = "terminal" | "lote" | "cupon";
+  const refiners: RefinerKey[] = ["terminal", "lote", "cupon"];
 
   for (const key of refiners) {
-    const lineValue = (line as Record<string, string>)[key];
+    const lineValue = line[key];
     if (!lineValue) continue;
-    const candidates = refined.filter((item) => (item as Record<string, string>)[key]);
+    const candidates = refined.filter((item) => Boolean(item[key]));
     if (!candidates.length) continue;
     const exact = candidates.filter(
-      (item) => String((item as Record<string, string>)[key]) === String(lineValue),
+      (item) => String(item[key]) === String(lineValue),
     );
     if (exact.length) {
       refined = exact;

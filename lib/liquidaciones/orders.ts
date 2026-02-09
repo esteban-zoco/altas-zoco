@@ -53,7 +53,7 @@ const mapOrderInfo = (orderId: string, payload: any): OrderInfo | null => {
   };
 };
 
-const buildAuthHeaders = (apiToken?: string) => {
+const buildAuthHeaders = (apiToken?: string): Record<string, string> => {
   if (!apiToken) return {};
   return { Authorization: `Bearer ${apiToken}` };
 };

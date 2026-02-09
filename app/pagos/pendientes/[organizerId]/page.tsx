@@ -14,7 +14,16 @@ const formatAmount = (value: number) =>
 export default function OrganizadorPendientePage() {
   const params = useParams<{ organizerId: string }>();
   const organizerId = params?.organizerId as string;
-  const [pending, setPending] = useState<any[]>([]);
+  type PendingItem = {
+    id: string;
+    organizerName?: string | null;
+    amountCents?: number | null;
+    opDate?: string | null;
+    cardBrand?: string | null;
+    orderId?: string | null;
+    transactionId?: string | null;
+  };
+  const [pending, setPending] = useState<PendingItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -30,10 +39,15 @@ export default function OrganizadorPendientePage() {
     setMessage(null);
     try {
       const response = await fetch(`/api/payouts/pending?organizerId=${organizerId}`);
-      const payload = await response.json();
+      const payload = (await response.json()) as {
+        success: boolean;
+        pending?: PendingItem[];
+        error?: string;
+      };
       if (payload.success) {
-        setPending(payload.pending || []);
-        const allIds = new Set((payload.pending || []).map((item: any) => item.id));
+        const pendingItems = payload.pending ?? [];
+        setPending(pendingItems);
+        const allIds = new Set<string>(pendingItems.map((item) => item.id));
         setSelected(allIds);
       } else {
         setMessage(payload.error || "No pudimos cargar operaciones");
