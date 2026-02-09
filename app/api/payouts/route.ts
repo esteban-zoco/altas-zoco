@@ -69,8 +69,10 @@ export async function POST(request: Request) {
     await ensureIndexes();
     const payload = await request.json();
     const organizerId = String(payload.organizerId ?? "").trim();
-    const reconciliationIds = Array.isArray(payload.reconciliationIds)
-      ? payload.reconciliationIds.map((id: string) => id.trim()).filter(Boolean)
+    const reconciliationIds: string[] = Array.isArray(payload.reconciliationIds)
+      ? payload.reconciliationIds
+          .map((id: unknown) => String(id).trim())
+          .filter(Boolean)
       : [];
     const bankReference = String(payload.bankReference ?? "").trim();
     const note = payload.note ? String(payload.note) : "";
@@ -95,7 +97,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    const recObjectIds = reconciliationIds.map((id) => new ObjectId(id));
+    const recObjectIds = reconciliationIds.map((id: string) => new ObjectId(id));
     const reconciliations = await db
       .collection<ReconciliationDoc>("reconciliations")
       .find({
