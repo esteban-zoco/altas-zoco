@@ -2,12 +2,11 @@
 
 import { getOrder } from "@/lib/liquidaciones/orders";
 
-interface RouteContext {
-  params: { id: string };
-}
-
-export async function GET(_: Request, context: RouteContext) {
-  const orderId = context.params.id;
+export async function GET(
+  _: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id: orderId } = await context.params;
   if (!orderId) {
     return NextResponse.json(
       { success: false, error: "Orden invalida" },
