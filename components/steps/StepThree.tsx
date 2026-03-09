@@ -55,6 +55,9 @@ export const StepThree = () => {
   const [savedToast, setSavedToast] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [optimizingCount, setOptimizingCount] = useState(0);
+  const [documentErrors, setDocumentErrors] = useState<Record<string, string>>(
+    {},
+  );
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedTermsAt, setAcceptedTermsAt] = useState<string | null>(null);
 
@@ -117,6 +120,34 @@ export const StepThree = () => {
     return true;
   };
 
+  const setDocumentError = (key: string, message?: string | null) => {
+    setDocumentErrors((prev) => {
+      if (!message) {
+        if (!(key in prev)) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      if (prev[key] === message) return prev;
+      return { ...prev, [key]: message };
+    });
+  };
+
+  const clearSizeErrors = () => {
+    setDocumentErrors((prev) => {
+      const entries = Object.entries(prev);
+      const hasAny = entries.some(([, value]) => value.includes("Supera el tama"));
+      if (!hasAny) return prev;
+      const next = { ...prev };
+      for (const [key, value] of entries) {
+        if (value.includes("Supera el tama")) {
+          delete next[key];
+        }
+      }
+      return next;
+    });
+  };
+
   const withOptimizing = async <T,>(work: () => Promise<T>) => {
     setOptimizingCount((prev) => prev + 1);
     try {
@@ -130,6 +161,7 @@ export const StepThree = () => {
     key: keyof NaturalPersonDocuments,
     files: File[],
   ) => {
+    const errorKey = `natural.${String(key)}`;
     const optimizedFiles = await withOptimizing(() => optimizeUploadFiles(files));
     const nextDocuments: DocumentState = {
       ...state.documents,
@@ -138,8 +170,16 @@ export const StepThree = () => {
         [key]: optimizedFiles,
       },
     };
-    if (!ensureWithinLimit(nextDocuments)) return;
+    if (!ensureWithinLimit(nextDocuments)) {
+      setDocumentError(
+        errorKey,
+        `Supera el tamaño máximo total (${sizeLimitLabel}).`,
+      );
+      return;
+    }
     setErrorMessage(null);
+    setDocumentError(errorKey, null);
+    clearSizeErrors();
     updateNaturalDocuments({
       [key]: optimizedFiles,
     } as Partial<NaturalPersonDocuments>);
@@ -149,6 +189,7 @@ export const StepThree = () => {
     key: keyof LegalPersonDocuments,
     files: File[],
   ) => {
+    const errorKey = `legal.${String(key)}`;
     const optimizedFiles = await withOptimizing(() => optimizeUploadFiles(files));
     const nextDocuments: DocumentState = {
       ...state.documents,
@@ -157,8 +198,16 @@ export const StepThree = () => {
         [key]: optimizedFiles,
       },
     };
-    if (!ensureWithinLimit(nextDocuments)) return;
+    if (!ensureWithinLimit(nextDocuments)) {
+      setDocumentError(
+        errorKey,
+        `Supera el tamaño máximo total (${sizeLimitLabel}).`,
+      );
+      return;
+    }
     setErrorMessage(null);
+    setDocumentError(errorKey, null);
+    clearSizeErrors();
     updateLegalDocuments({ [key]: optimizedFiles });
   };
 
@@ -189,6 +238,57 @@ export const StepThree = () => {
       }
     }
     return missing;
+  };
+
+  const buildMissingDocumentErrors = () => {
+    const errors: Record<string, string> = {};
+    const message = "Requerido";
+    if (isNatural) {
+      if (!naturalDocs.dniFront.length) errors["natural.dniFront"] = message;
+      if (!naturalDocs.dniBack.length) errors["natural.dniBack"] = message;
+      if (!naturalDocs.cbu.length) errors["natural.cbu"] = message;
+      if (!naturalDocs.afip.length) errors["natural.afip"] = message;
+      if (!naturalDocs.rentas.length) errors["natural.rentas"] = message;
+    } else {
+      if (!legalDocs.dniRepresentativeFront.length)
+        errors["legal.dniRepresentativeFront"] = message;
+      if (!legalDocs.dniRepresentativeBack.length)
+        errors["legal.dniRepresentativeBack"] = message;
+      if (!legalDocs.companyCuit.length) errors["legal.companyCuit"] = message;
+      if (!legalDocs.companyCbu.length) errors["legal.companyCbu"] = message;
+      if (!legalDocs.bylaws.length) errors["legal.bylaws"] = message;
+      if (!legalDocs.rentas.length) errors["legal.rentas"] = message;
+    }
+    return errors;
+  };
+
+  const getLargestDocumentKey = () => {
+    const entries: Array<[string, File[]]> = isNatural
+      ? [
+          ["natural.dniFront", naturalDocs.dniFront],
+          ["natural.dniBack", naturalDocs.dniBack],
+          ["natural.cbu", naturalDocs.cbu],
+          ["natural.afip", naturalDocs.afip],
+          ["natural.rentas", naturalDocs.rentas],
+        ]
+      : [
+          ["legal.dniRepresentativeFront", legalDocs.dniRepresentativeFront],
+          ["legal.dniRepresentativeBack", legalDocs.dniRepresentativeBack],
+          ["legal.companyCuit", legalDocs.companyCuit],
+          ["legal.companyCbu", legalDocs.companyCbu],
+          ["legal.bylaws", legalDocs.bylaws],
+          ["legal.rentas", legalDocs.rentas],
+        ];
+
+    let largest: { key: string; size: number } | null = null;
+    for (const [key, files] of entries) {
+      for (const file of files) {
+        if (!largest || file.size > largest.size) {
+          largest = { key, size: file.size };
+        }
+      }
+    }
+    return largest?.key ?? null;
   };
 
   const buildDocumentNames = (): OnboardingSubmissionPayload["documentsMeta"] => ({
@@ -364,6 +464,8 @@ export const StepThree = () => {
     }
     const missing = requiredDocumentsMissing();
     if (missing.length) {
+      const missingErrors = buildMissingDocumentErrors();
+      setDocumentErrors((prev) => ({ ...prev, ...missingErrors }));
       setErrorMessage(
         `Faltan adjuntar: ${missing
           .map((item) => item.toLowerCase())
@@ -373,11 +475,18 @@ export const StepThree = () => {
     }
     if (optimizingCount > 0) {
       setErrorMessage(
-        "Estamos optimizando imÃ¡genes. EsperÃ¡ unos segundos y volve a intentar.",
+        "Estamos optimizando imagenes. Esperá unos segundos y volve a intentar.",
       );
       return;
     }
     if (totalBytes > MAX_EFFECTIVE_UPLOAD_BYTES) {
+      const largestKey = getLargestDocumentKey();
+      if (largestKey) {
+        setDocumentError(
+          largestKey,
+          "Este archivo es el más pesado. Reducilo o reemplazalo por una versión más liviana.",
+        );
+      }
       setErrorMessage(
         `La documentacion supera el tamano maximo (${sizeLimitLabel}). Reduci los archivos e intenta nuevamente.`,
       );
@@ -395,8 +504,15 @@ export const StepThree = () => {
       });
       if (!response.ok) {
         if (response.status === 413) {
+          const largestKey = getLargestDocumentKey();
+          if (largestKey) {
+            setDocumentError(
+              largestKey,
+              "El servidor rechazó la carga por tamaño. Probá reduciendo este archivo (es el más pesado).",
+            );
+          }
           throw new Error(
-            `La documentaciÃ³n supera el lÃ­mite permitido por el servidor (${sizeLimitLabel}). ReducÃ­ el peso de los archivos e intentÃ¡ nuevamente.`,
+            `La documentación supera el límite permitido por el servidor (${sizeLimitLabel}). Reducí el peso de los archivos e intentá nuevamente.`,
           );
         }
         const contentType = response.headers.get("content-type") ?? "";
@@ -448,6 +564,7 @@ export const StepThree = () => {
                 title="DNI frente"
                 description="Subí la cara frontal del DNI."
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["natural.dniFront"]}
                 files={naturalDocs.dniFront}
                 onFilesChange={(files) => updateNaturalFiles("dniFront", files)}
               />
@@ -455,6 +572,7 @@ export const StepThree = () => {
                 title="DNI dorso"
                 description="Subí la cara trasera del DNI."
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["natural.dniBack"]}
                 files={naturalDocs.dniBack}
                 onFilesChange={(files) => updateNaturalFiles("dniBack", files)}
               />
@@ -462,6 +580,7 @@ export const StepThree = () => {
                 title="Constancia / captura de CBU"
                 description="Debe verse claramente tu nombre y el CBU/CVU."
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["natural.cbu"]}
                 files={naturalDocs.cbu}
                 onFilesChange={(files) => updateNaturalFiles("cbu", files)}
               />
@@ -469,6 +588,7 @@ export const StepThree = () => {
                 title="Constancia AFIP / ARCA"
                 description="Subi una constancia vigente emitida por AFIP o ARCA."
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["natural.afip"]}
                 files={naturalDocs.afip}
                 onFilesChange={(files) => updateNaturalFiles("afip", files)}
               />
@@ -476,6 +596,7 @@ export const StepThree = () => {
                 title="Constancia de Rentas"
                 description="Adjuntá la constancia provincial vigente del comercio."
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["natural.rentas"]}
                 files={naturalDocs.rentas}
                 onFilesChange={(files) => updateNaturalFiles("rentas", files)}
               />
@@ -485,6 +606,7 @@ export const StepThree = () => {
               <FileUploadItem
                 title="DNI (frente) del representante legal / persona autorizada"
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["legal.dniRepresentativeFront"]}
                 files={legalDocs.dniRepresentativeFront}
                 onFilesChange={(files) =>
                   updateLegalFiles("dniRepresentativeFront", files)
@@ -493,6 +615,7 @@ export const StepThree = () => {
               <FileUploadItem
                 title="DNI (dorso) del representante legal / persona autorizada"
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["legal.dniRepresentativeBack"]}
                 files={legalDocs.dniRepresentativeBack}
                 onFilesChange={(files) =>
                   updateLegalFiles("dniRepresentativeBack", files)
@@ -501,12 +624,14 @@ export const StepThree = () => {
               <FileUploadItem
                 title="Constancia de CUIT de la sociedad (ARCA)"
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["legal.companyCuit"]}
                 files={legalDocs.companyCuit}
                 onFilesChange={(files) => updateLegalFiles("companyCuit", files)}
               />
               <FileUploadItem
                 title="Constancia / captura de CBU de la sociedad"
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["legal.companyCbu"]}
                 files={legalDocs.companyCbu}
                 onFilesChange={(files) => updateLegalFiles("companyCbu", files)}
               />
@@ -515,6 +640,7 @@ export const StepThree = () => {
                 description="Podes subir uno o varios archivos."
                 accept={ACCEPT_ANY_FILE}
                 allowMultiple
+                error={documentErrors["legal.bylaws"]}
                 files={legalDocs.bylaws}
                 onFilesChange={(files) => updateLegalFiles("bylaws", files)}
               />
@@ -522,6 +648,7 @@ export const StepThree = () => {
                 title="Constancia de Rentas de la sociedad"
                 description="Subí la constancia provincial obligatoria."
                 accept={ACCEPT_ANY_FILE}
+                error={documentErrors["legal.rentas"]}
                 files={legalDocs.rentas}
                 onFilesChange={(files) => updateLegalFiles("rentas", files)}
               />

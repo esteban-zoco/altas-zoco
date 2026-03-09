@@ -9,6 +9,7 @@ interface FileUploadItemProps {
   title: string;
   description?: string;
   optional?: boolean;
+  error?: string;
   accept?: string;
   allowMultiple?: boolean;
   files: File[];
@@ -19,6 +20,7 @@ export const FileUploadItem = ({
   title,
   description,
   optional,
+  error,
   accept,
   allowMultiple,
   files,
@@ -55,6 +57,7 @@ export const FileUploadItem = ({
   };
 
   const hasFiles = files.length > 0;
+  const hasError = Boolean(error && error.trim());
   const uploadLabel = hasFiles
     ? allowMultiple
       ? "Agregar archivos"
@@ -68,7 +71,12 @@ export const FileUploadItem = ({
   const handleClearAll = () => onFilesChange([]);
 
   return (
-    <div className="rounded-3xl border border-slate-200 p-5">
+    <div
+      className={clsx(
+        "rounded-3xl border p-5",
+        hasError ? "border-rose-200 bg-rose-50/40" : "border-slate-200",
+      )}
+    >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-base font-semibold text-slate-900">
@@ -81,6 +89,9 @@ export const FileUploadItem = ({
           </p>
           {description && (
             <p className="text-sm text-slate-600">{description}</p>
+          )}
+          {hasError && (
+            <p className="mt-1 text-xs font-medium text-rose-600">{error}</p>
           )}
         </div>
         {hasFiles ? (

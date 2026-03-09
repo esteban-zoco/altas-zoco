@@ -40,7 +40,7 @@ export const ConfirmationScreen = () => {
     const summary = getSubmissionSummary();
     if (!summary) {
       setPdfMessage(
-        "No encontramos los datos para generar el PDF. Reenvǭ tu solicitud para recrearlo.",
+        "No encontramos los datos para generar el PDF. Reenvía tu solicitud para recrearlo.",
       );
       return;
     }
