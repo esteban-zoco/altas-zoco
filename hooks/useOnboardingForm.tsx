@@ -186,6 +186,10 @@ export const OnboardingFormProvider = ({
         legalPersonData: {
           ...prev.legalPersonData,
           ...data,
+          businessAddress: {
+            ...prev.legalPersonData.businessAddress,
+            ...(data.businessAddress ?? {}),
+          },
           address: {
             ...prev.legalPersonData.address,
             ...(data.address ?? {}),
@@ -252,12 +256,71 @@ export const OnboardingFormProvider = ({
 
   const resumeDraft = useCallback(() => {
     if (!pendingDraft) return;
+    const emptyState = createEmptyOnboardingState();
+    const emptyBeneficialOwner = emptyState.legalPersonData.beneficialOwners[0];
+    const rawBeneficialOwners = (
+      pendingDraft.legalPersonData as Partial<LegalPersonData> & {
+        beneficialOwners?: unknown;
+      }
+    ).beneficialOwners;
+
+    const normalizeBeneficialOwners = () => {
+      if (!Array.isArray(rawBeneficialOwners)) {
+        return emptyState.legalPersonData.beneficialOwners;
+      }
+
+      const owners = rawBeneficialOwners
+        .map((owner) => {
+          const rawOwner = owner as unknown as Record<string, unknown> | null;
+          if (!rawOwner) return null;
+
+          const address =
+            typeof rawOwner.address === "string"
+              ? rawOwner.address
+              : (() => {
+                  const legacy = rawOwner.realAddress as
+                    | Record<string, unknown>
+                    | undefined;
+                  if (!legacy) return "";
+                  const parts = [
+                    legacy.street,
+                    legacy.number,
+                    legacy.floor ? `Piso/Depto ${legacy.floor}` : undefined,
+                    legacy.city,
+                    legacy.province,
+                    legacy.postalCode ? `CP ${legacy.postalCode}` : undefined,
+                  ]
+                    .filter((part) => typeof part === "string" && part.trim())
+                    .map((part) => (part as string).trim());
+                  return parts.join(", ");
+                })();
+
+          const { realAddress: _realAddress, ...rest } = rawOwner;
+          return {
+            ...emptyBeneficialOwner,
+            ...rest,
+            address,
+          } as LegalPersonData["beneficialOwners"][number];
+        })
+        .filter(Boolean) as LegalPersonData["beneficialOwners"];
+
+      return owners.length ? owners : emptyState.legalPersonData.beneficialOwners;
+    };
+
+    const normalizedBeneficialOwners = normalizeBeneficialOwners();
     setState((prev) => ({
       ...prev,
       personType: pendingDraft.personType,
       basicData: pendingDraft.basicData,
       naturalPersonData: pendingDraft.naturalPersonData,
-      legalPersonData: pendingDraft.legalPersonData,
+      legalPersonData: {
+        ...emptyState.legalPersonData,
+        ...pendingDraft.legalPersonData,
+        businessAddress:
+          (pendingDraft.legalPersonData as Partial<LegalPersonData>)
+            .businessAddress ?? emptyState.legalPersonData.businessAddress,
+        beneficialOwners: normalizedBeneficialOwners,
+      },
     }));
     setCurrentStep(pendingDraft.step ?? 1);
     setPendingDraft(null);

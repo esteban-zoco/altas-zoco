@@ -1,18 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Alert } from "@/components/Alert";
 import { StepLayout } from "@/components/StepLayout";
 import { FileUploadItem } from "@/components/documents/FileUploadItem";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
+import {
+  MAX_TOTAL_UPLOAD_BYTES,
+  MAX_TOTAL_UPLOAD_LABEL,
+  formatBytes,
+} from "@/lib/onboardingUploadLimits";
 import type {
+  DocumentState,
   LegalPersonDocuments,
   NaturalPersonDocuments,
   OnboardingSubmissionPayload,
 } from "@/types/onboarding";
 
 const ACCEPT_ANY_FILE = "*/*";
+
+const sumFiles = (files: File[]) =>
+  files.reduce((total, file) => total + file.size, 0);
+
+const getDocumentsTotalBytes = (documents: DocumentState) => {
+  const { natural, legal } = documents;
+  return (
+    sumFiles(natural.dniFront) +
+    sumFiles(natural.dniBack) +
+    sumFiles(natural.cbu) +
+    sumFiles(natural.afip) +
+    sumFiles(natural.rentas) +
+    sumFiles(legal.dniRepresentativeFront) +
+    sumFiles(legal.dniRepresentativeBack) +
+    sumFiles(legal.companyCuit) +
+    sumFiles(legal.companyCbu) +
+    sumFiles(legal.bylaws) +
+    sumFiles(legal.rentas)
+  );
+};
 
 export const StepThree = () => {
   const {
@@ -33,6 +59,12 @@ export const StepThree = () => {
   const naturalDocs = state.documents.natural;
   const legalDocs = state.documents.legal;
   const isNatural = state.personType === "PF";
+  const totalBytes = useMemo(
+    () => getDocumentsTotalBytes(state.documents),
+    [state.documents],
+  );
+  const sizeLimitLabel = MAX_TOTAL_UPLOAD_LABEL;
+  const totalBytesLabel = formatBytes(totalBytes);
 
   const savedFeedback =
     savedToast ??
@@ -72,10 +104,30 @@ export const StepThree = () => {
     return `${base}-${index + 1}.${extension}`;
   };
 
+  const ensureWithinLimit = (nextDocuments: DocumentState) => {
+    const nextTotal = getDocumentsTotalBytes(nextDocuments);
+    if (nextTotal > MAX_TOTAL_UPLOAD_BYTES) {
+      setErrorMessage(
+        `La documentacion supera el tamaño maximo (${sizeLimitLabel}). Reduci los archivos e intenta nuevamente.`,
+      );
+      return false;
+    }
+    return true;
+  };
+
   const updateNaturalFiles = (
     key: keyof NaturalPersonDocuments,
     files: File[],
   ) => {
+    const nextDocuments: DocumentState = {
+      ...state.documents,
+      natural: {
+        ...naturalDocs,
+        [key]: files,
+      },
+    };
+    if (!ensureWithinLimit(nextDocuments)) return;
+    setErrorMessage(null);
     updateNaturalDocuments({ [key]: files } as Partial<NaturalPersonDocuments>);
   };
 
@@ -83,6 +135,15 @@ export const StepThree = () => {
     key: keyof LegalPersonDocuments,
     files: File[],
   ) => {
+    const nextDocuments: DocumentState = {
+      ...state.documents,
+      legal: {
+        ...legalDocs,
+        [key]: files,
+      },
+    };
+    if (!ensureWithinLimit(nextDocuments)) return;
+    setErrorMessage(null);
     updateLegalDocuments({ [key]: files });
   };
 
@@ -295,6 +356,12 @@ export const StepThree = () => {
       );
       return;
     }
+    if (totalBytes > MAX_TOTAL_UPLOAD_BYTES) {
+      setErrorMessage(
+        `La documentacion supera el tamano maximo (${sizeLimitLabel}). Reduci los archivos e intenta nuevamente.`,
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -328,7 +395,7 @@ export const StepThree = () => {
     <div className="space-y-6">
       <Alert
         title="Subí estos documentos para que podamos activar tu cuenta en Zoco."
-        description="Podes cargar archivos en cualquier formato. Si necesitas tiempo, guarda tu progreso y segui despues."
+        description={`Podes cargar archivos en cualquier formato. Limite total: ${sizeLimitLabel}. Si necesitas tiempo, guarda tu progreso y segui despues.`}
       />
       <StepLayout
         step={3}
@@ -433,6 +500,7 @@ export const StepThree = () => {
             </>
           )}
         </div>
+        <p className="text-xs text-slate-500">Tamano total actual: {totalBytesLabel} / {sizeLimitLabel}</p>
         <div className="space-y-3 rounded-3xl border border-slate-200 p-4">
           <h3 className="text-sm font-semibold text-slate-900">
             Declaración jurada
@@ -480,7 +548,6 @@ export const StepThree = () => {
     </div>
   );
 };
-
 
 
 

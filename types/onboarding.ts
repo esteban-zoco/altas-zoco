@@ -49,12 +49,29 @@ export interface RepresentativeData {
   cuit: string;
 }
 
+export type ParticipationType = "directa" | "indirecta";
+
+export interface BeneficialOwnerData {
+  fullName: string;
+  dni: string;
+  cuit: string;
+  participationPercent: string;
+  participationType: ParticipationType;
+  nationality: string;
+  profession: string;
+  maritalStatus: string;
+  address: string;
+  isPep: boolean;
+}
+
 export interface LegalPersonData {
   businessName: string;
+  businessAddress: Address;
   address: Address;
   companyCuit: string;
   taxCondition: TaxCondition;
   representative: RepresentativeData;
+  beneficialOwners: BeneficialOwnerData[];
   rentas: RentasStatus;
   isPep: boolean;
   pepReason: string;
@@ -134,6 +151,7 @@ export const createEmptyOnboardingState = (): OnboardingFormState => ({
   },
   legalPersonData: {
     businessName: "",
+    businessAddress: { ...emptyAddress },
     address: { ...emptyAddress },
     companyCuit: "",
     taxCondition: "monotributista",
@@ -144,6 +162,20 @@ export const createEmptyOnboardingState = (): OnboardingFormState => ({
       phone: "",
       cuit: "",
     },
+    beneficialOwners: [
+      {
+        fullName: "",
+        dni: "",
+        cuit: "",
+        participationPercent: "",
+        participationType: "directa",
+        nationality: "",
+        profession: "",
+        maritalStatus: "",
+        address: "",
+        isPep: false,
+      },
+    ],
     rentas: {
       inscripto: false,
       exento: false,

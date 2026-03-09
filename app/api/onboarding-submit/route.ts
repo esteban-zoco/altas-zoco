@@ -1,6 +1,12 @@
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 
+import {
+  MAX_EMAIL_ATTACHMENT_BYTES,
+  MAX_TOTAL_UPLOAD_BYTES,
+  MAX_TOTAL_UPLOAD_LABEL,
+  getBase64Size,
+} from "@/lib/onboardingUploadLimits";
 import type { OnboardingSubmissionPayload } from "@/types/onboarding";
 
 const buildAddress = (
@@ -100,10 +106,24 @@ const buildHtml = (
       : `<ul>
           <li>Razón social: ${payload.legalPersonData.businessName}</li>
           <li>CUIT de la sociedad: ${payload.legalPersonData.companyCuit}</li>
-          <li>Domicilio legal: ${buildAddress(payload.legalPersonData.address)}</li>
+          <li>Domicilio de la razón social: ${buildAddress(payload.legalPersonData.businessAddress)}</li>
+          <li>Domicilio del representante legal: ${buildAddress(payload.legalPersonData.address)}</li>
           <li>Condición fiscal: ${payload.legalPersonData.taxCondition}</li>
           <li>Representante: ${payload.legalPersonData.representative.fullName} (${payload.legalPersonData.representative.dni})</li>
           <li>PEP representante: ${payload.legalPersonData.isPep ? `Sí - ${payload.legalPersonData.pepReason || "sin detalle"}` : "No"}</li>
+        </ul>
+        <h3>Beneficiarios finales</h3>
+        <ul>
+          ${
+            payload.legalPersonData.beneficialOwners?.length
+              ? payload.legalPersonData.beneficialOwners
+                  .map(
+                    (owner, index) =>
+                      `<li>#${index + 1}: ${owner.fullName} - DNI: ${owner.dni} - CUIT: ${owner.cuit} - %: ${owner.participationPercent} (${owner.participationType}) - Nacionalidad: ${owner.nationality} - Profesión: ${owner.profession} - Estado civil: ${owner.maritalStatus} - Domicilio: ${owner.address} - PEP: ${owner.isPep ? "Sí" : "No"}</li>`,
+                  )
+                  .join("")
+              : "<li>Sin datos</li>"
+          }
         </ul>`
   }
   <h2>Documentación adjunta</h2>
@@ -162,13 +182,24 @@ Domicilio real: ${buildAddress(payload.naturalPersonData.address)}
 Nacionalidad: ${payload.naturalPersonData.nationality}
 PEP: ${payload.naturalPersonData.isPep ? `Sí - ${payload.naturalPersonData.pepReason}` : "No"}`
     : `Razón social: ${payload.legalPersonData.businessName}
-Domicilio legal: ${buildAddress(payload.legalPersonData.address)}
+Domicilio de la razón social: ${buildAddress(payload.legalPersonData.businessAddress)}
+Domicilio representante legal: ${buildAddress(payload.legalPersonData.address)}
 Representante: ${payload.legalPersonData.representative.fullName}
-Representante PEP: ${payload.legalPersonData.isPep ? `Sí - ${payload.legalPersonData.pepReason}` : "No"}`
+Representante PEP: ${payload.legalPersonData.isPep ? `Sí - ${payload.legalPersonData.pepReason}` : "No"}
+
+Beneficiarios finales:
+${
+  payload.legalPersonData.beneficialOwners?.length
+    ? payload.legalPersonData.beneficialOwners
+        .map(
+          (owner, index) =>
+            `- #${index + 1} ${owner.fullName} (DNI ${owner.dni}, CUIT ${owner.cuit}) - % ${owner.participationPercent} (${owner.participationType}) - ${owner.nationality} - PEP: ${owner.isPep ? "Sí" : "No"} - Domicilio: ${owner.address}`,
+        )
+        .join("\n")
+    : "- Sin datos"
+}`
 }
 `;
-
-const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024; // 20MB Brevo SMTP limit
 
 export async function POST(request: Request) {
   try {
@@ -184,6 +215,7 @@ export async function POST(request: Request) {
 
     const payload = JSON.parse(payloadRaw) as OnboardingSubmissionPayload;
     let totalAttachmentBytes = 0;
+    let totalEncodedBytes = 0;
     const attachments: {
       filename: string;
       content: string;
@@ -195,20 +227,25 @@ export async function POST(request: Request) {
       if (value instanceof File) {
         const buffer = Buffer.from(await value.arrayBuffer());
         const size = buffer.length;
+        const base64Size = getBase64Size(size);
         totalAttachmentBytes += size;
+        totalEncodedBytes += base64Size;
+        const content = buffer.toString("base64");
         attachments.push({
           filename: value.name || `${key}.pdf`,
-          content: buffer.toString("base64"),
+          content,
           encoding: "base64",
         });
       }
     }
-    if (totalAttachmentBytes > MAX_ATTACHMENT_SIZE) {
+    if (
+      totalAttachmentBytes > MAX_TOTAL_UPLOAD_BYTES ||
+      totalEncodedBytes > MAX_EMAIL_ATTACHMENT_BYTES
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "La documentación supera el tamaño máximo (20MB). Reducí los archivos e intentá nuevamente.",
+          error: `La documentación supera el tamaño máximo (${MAX_TOTAL_UPLOAD_LABEL}). Reducí los archivos e intentá nuevamente.`,
         },
         { status: 400 },
       );
@@ -262,4 +299,7 @@ export async function POST(request: Request) {
     );
   }
 }
+
+
+
 

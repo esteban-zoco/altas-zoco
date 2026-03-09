@@ -135,7 +135,10 @@ export const generateSubmissionPdf = (
       `CUIT de la sociedad: ${payload.legalPersonData.companyCuit || "-"}`,
     );
     addParagraph(
-      `Domicilio legal: ${formatAddress(payload.legalPersonData.address)}`,
+      `Domicilio de la razón social: ${formatAddress(payload.legalPersonData.businessAddress)}`,
+    );
+    addParagraph(
+      `Domicilio representante legal: ${formatAddress(payload.legalPersonData.address)}`,
     );
     addParagraph(
       `Condicion fiscal: ${payload.legalPersonData.taxCondition || "-"}`,
@@ -154,6 +157,26 @@ export const generateSubmissionPdf = (
         payload.legalPersonData.pepReason,
       )}`,
     );
+
+    addSection("Beneficiarios finales");
+    if (payload.legalPersonData.beneficialOwners?.length) {
+      payload.legalPersonData.beneficialOwners.forEach((owner, index) => {
+        addParagraph(
+          `#${index + 1} ${owner.fullName || "-"} - DNI: ${
+            owner.dni || "-"
+          } - CUIT: ${owner.cuit || "-"} - %: ${
+            owner.participationPercent || "-"
+          } (${owner.participationType || "-"})`,
+        );
+        addParagraph(`Nacionalidad: ${owner.nationality || "-"}`);
+        addParagraph(`Profesión: ${owner.profession || "-"}`);
+        addParagraph(`Estado civil: ${owner.maritalStatus || "-"}`);
+        addParagraph(`Domicilio: ${owner.address || "-"}`);
+        addParagraph(`PEP: ${owner.isPep ? "Sí" : "No"}`);
+      });
+    } else {
+      addParagraph("Sin datos");
+    }
   }
 
   addSection("Documentos enviados PF");

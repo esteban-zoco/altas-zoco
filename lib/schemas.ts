@@ -53,6 +53,31 @@ const rentasSchema = z.object({
   convenioMultilateral: checkboxBoolean,
 });
 
+const participationTypeSchema = z.enum(["directa", "indirecta"]);
+
+const participationPercentSchema = z
+  .string()
+  .min(1, { message: "Ingresá el porcentaje" })
+  .refine((value) => {
+    const normalized = value.replace(",", ".").trim();
+    const numericValue = Number(normalized);
+    if (!Number.isFinite(numericValue)) return false;
+    return numericValue >= 0 && numericValue <= 100;
+  }, "Ingresá un porcentaje entre 0 y 100");
+
+const beneficialOwnerSchema = z.object({
+  fullName: z.string().min(3, { message: "Ingresá el nombre completo" }),
+  dni: z.string().min(7, { message: "Ingresá el DNI" }),
+  cuit: cuitSchema,
+  participationPercent: participationPercentSchema,
+  participationType: participationTypeSchema,
+  nationality: z.string().min(2, { message: "Ingresá la nacionalidad" }),
+  profession: z.string().min(2, { message: "Ingresá la profesión" }),
+  maritalStatus: z.string().min(2, { message: "Ingresá el estado civil" }),
+  address: z.string().min(5, { message: "Ingresá el domicilio" }),
+  isPep: checkboxBoolean,
+});
+
 export const basicStepSchema = z.object({
   personType: z.enum(["PF", "PJ"]),
   cuit: cuitSchema,
@@ -102,6 +127,7 @@ export const legalPersonSchema = z.object({
   businessName: z
     .string()
     .min(2, { message: "Ingresá la razón social" }),
+  businessAddress: addressSchema,
   address: addressSchema,
   companyCuit: cuitSchema,
   taxCondition: taxConditionSchema,
@@ -114,6 +140,9 @@ export const legalPersonSchema = z.object({
     phone: phoneSchema,
     cuit: cuitSchema,
   }),
+  beneficialOwners: z
+    .array(beneficialOwnerSchema)
+    .min(1, { message: "Agregá al menos un beneficiario final" }),
   rentas: rentasSchema,
   isPep: checkboxBoolean,
   pepReason: z.string().optional(),
