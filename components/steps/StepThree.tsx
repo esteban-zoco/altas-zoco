@@ -7,10 +7,11 @@ import { StepLayout } from "@/components/StepLayout";
 import { FileUploadItem } from "@/components/documents/FileUploadItem";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import {
-  MAX_TOTAL_UPLOAD_BYTES,
-  MAX_TOTAL_UPLOAD_LABEL,
+  MAX_EFFECTIVE_UPLOAD_BYTES,
+  MAX_EFFECTIVE_UPLOAD_LABEL,
   formatBytes,
 } from "@/lib/onboardingUploadLimits";
+import { optimizeUploadFiles } from "@/lib/optimizeUploadFiles.client";
 import type {
   DocumentState,
   LegalPersonDocuments,
@@ -53,6 +54,7 @@ export const StepThree = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedToast, setSavedToast] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [optimizingCount, setOptimizingCount] = useState(0);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedTermsAt, setAcceptedTermsAt] = useState<string | null>(null);
 
@@ -63,7 +65,7 @@ export const StepThree = () => {
     () => getDocumentsTotalBytes(state.documents),
     [state.documents],
   );
-  const sizeLimitLabel = MAX_TOTAL_UPLOAD_LABEL;
+  const sizeLimitLabel = MAX_EFFECTIVE_UPLOAD_LABEL;
   const totalBytesLabel = formatBytes(totalBytes);
 
   const savedFeedback =
@@ -106,7 +108,7 @@ export const StepThree = () => {
 
   const ensureWithinLimit = (nextDocuments: DocumentState) => {
     const nextTotal = getDocumentsTotalBytes(nextDocuments);
-    if (nextTotal > MAX_TOTAL_UPLOAD_BYTES) {
+    if (nextTotal > MAX_EFFECTIVE_UPLOAD_BYTES) {
       setErrorMessage(
         `La documentacion supera el tamaño maximo (${sizeLimitLabel}). Reduci los archivos e intenta nuevamente.`,
       );
@@ -115,36 +117,49 @@ export const StepThree = () => {
     return true;
   };
 
-  const updateNaturalFiles = (
+  const withOptimizing = async <T,>(work: () => Promise<T>) => {
+    setOptimizingCount((prev) => prev + 1);
+    try {
+      return await work();
+    } finally {
+      setOptimizingCount((prev) => Math.max(0, prev - 1));
+    }
+  };
+
+  const updateNaturalFiles = async (
     key: keyof NaturalPersonDocuments,
     files: File[],
   ) => {
+    const optimizedFiles = await withOptimizing(() => optimizeUploadFiles(files));
     const nextDocuments: DocumentState = {
       ...state.documents,
       natural: {
         ...naturalDocs,
-        [key]: files,
+        [key]: optimizedFiles,
       },
     };
     if (!ensureWithinLimit(nextDocuments)) return;
     setErrorMessage(null);
-    updateNaturalDocuments({ [key]: files } as Partial<NaturalPersonDocuments>);
+    updateNaturalDocuments({
+      [key]: optimizedFiles,
+    } as Partial<NaturalPersonDocuments>);
   };
 
-  const updateLegalFiles = (
+  const updateLegalFiles = async (
     key: keyof LegalPersonDocuments,
     files: File[],
   ) => {
+    const optimizedFiles = await withOptimizing(() => optimizeUploadFiles(files));
     const nextDocuments: DocumentState = {
       ...state.documents,
       legal: {
         ...legalDocs,
-        [key]: files,
+        [key]: optimizedFiles,
       },
     };
     if (!ensureWithinLimit(nextDocuments)) return;
     setErrorMessage(null);
-    updateLegalDocuments({ [key]: files });
+    updateLegalDocuments({ [key]: optimizedFiles });
   };
 
   const requiredDocumentsMissing = () => {
@@ -356,7 +371,13 @@ export const StepThree = () => {
       );
       return;
     }
-    if (totalBytes > MAX_TOTAL_UPLOAD_BYTES) {
+    if (optimizingCount > 0) {
+      setErrorMessage(
+        "Estamos optimizando imÃ¡genes. EsperÃ¡ unos segundos y volve a intentar.",
+      );
+      return;
+    }
+    if (totalBytes > MAX_EFFECTIVE_UPLOAD_BYTES) {
       setErrorMessage(
         `La documentacion supera el tamano maximo (${sizeLimitLabel}). Reduci los archivos e intenta nuevamente.`,
       );
@@ -373,8 +394,16 @@ export const StepThree = () => {
         body,
       });
       if (!response.ok) {
-        const error = await response.json().catch(() => null);
-        throw new Error(error?.error ?? "Error inesperado");
+        if (response.status === 413) {
+          throw new Error(
+            `La documentaciÃ³n supera el lÃ­mite permitido por el servidor (${sizeLimitLabel}). ReducÃ­ el peso de los archivos e intentÃ¡ nuevamente.`,
+          );
+        }
+        const contentType = response.headers.get("content-type") ?? "";
+        const isJson = contentType.includes("application/json");
+        const error = isJson ? await response.json().catch(() => null) : null;
+        const rawText = !isJson ? await response.text().catch(() => "") : "";
+        throw new Error(error?.error ?? rawText?.trim() ?? "Error inesperado");
       }
       markComplete(payload);
     } catch (error) {
@@ -406,8 +435,8 @@ export const StepThree = () => {
           label: "Enviar solicitud de alta",
           type: "button",
           onClick: handleFinalSubmit,
-          disabled: isSubmitting,
-          loading: isSubmitting,
+          disabled: isSubmitting || optimizingCount > 0,
+          loading: isSubmitting || optimizingCount > 0,
         }}
         onSaveDraft={handleSave}
         savedFeedback={savedFeedback}
@@ -500,7 +529,10 @@ export const StepThree = () => {
             </>
           )}
         </div>
-        <p className="text-xs text-slate-500">Tamano total actual: {totalBytesLabel} / {sizeLimitLabel}</p>
+        <p className="text-xs text-slate-500">
+          Tamano total actual: {totalBytesLabel} / {sizeLimitLabel}
+          {optimizingCount > 0 ? " (optimizando imÃ¡genes...)" : ""}
+        </p>
         <div className="space-y-3 rounded-3xl border border-slate-200 p-4">
           <h3 className="text-sm font-semibold text-slate-900">
             Declaración jurada
@@ -548,6 +580,3 @@ export const StepThree = () => {
     </div>
   );
 };
-
-
-

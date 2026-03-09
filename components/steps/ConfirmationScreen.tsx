@@ -47,7 +47,7 @@ export const ConfirmationScreen = () => {
     try {
       setIsGeneratingPdf(true);
       generateSubmissionPdf(summary);
-      setPdfMessage("PDF descargado. PodǸs guardarlo para tus registros.");
+      setPdfMessage("PDF descargado. Podes   guardarlo para tus registros.");
     } catch (error) {
       console.error("No se pudo generar el PDF del formulario", error);
       setPdfMessage(

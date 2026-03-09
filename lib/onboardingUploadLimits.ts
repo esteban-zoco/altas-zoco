@@ -8,6 +8,20 @@ export const MAX_TOTAL_UPLOAD_BYTES = Math.max(
   5 * 1024 * 1024,
 );
 
+const DEFAULT_REQUEST_BODY_BYTES = 4 * 1024 * 1024;
+const parsedRequestMaxBytes = Number(
+  process.env.NEXT_PUBLIC_ONBOARDING_REQUEST_MAX_BYTES ?? "",
+);
+export const MAX_REQUEST_UPLOAD_BYTES =
+  Number.isFinite(parsedRequestMaxBytes) && parsedRequestMaxBytes > 0
+    ? parsedRequestMaxBytes
+    : DEFAULT_REQUEST_BODY_BYTES;
+
+export const MAX_EFFECTIVE_UPLOAD_BYTES = Math.min(
+  MAX_TOTAL_UPLOAD_BYTES,
+  MAX_REQUEST_UPLOAD_BYTES,
+);
+
 export const getBase64Size = (bytes: number) => Math.ceil(bytes / 3) * 4;
 
 export const formatBytes = (bytes: number) => {
@@ -17,3 +31,5 @@ export const formatBytes = (bytes: number) => {
 };
 
 export const MAX_TOTAL_UPLOAD_LABEL = formatBytes(MAX_TOTAL_UPLOAD_BYTES);
+export const MAX_REQUEST_UPLOAD_LABEL = formatBytes(MAX_REQUEST_UPLOAD_BYTES);
+export const MAX_EFFECTIVE_UPLOAD_LABEL = formatBytes(MAX_EFFECTIVE_UPLOAD_BYTES);
