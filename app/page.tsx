@@ -1,14 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 import { ResumeDraftDialog } from "@/components/ResumeDraftDialog";
 import { ConfirmationScreen } from "@/components/steps/ConfirmationScreen";
 import { StepOne } from "@/components/steps/StepOne";
 import { StepThree } from "@/components/steps/StepThree";
 import { StepTwo } from "@/components/steps/StepTwo";
-import { OnboardingFormProvider, useOnboardingForm } from "@/hooks/useOnboardingForm";
+import {
+  OnboardingFormProvider,
+  useOnboardingForm,
+} from "@/hooks/useOnboardingForm";
 import Logo from "./Logo ZOCO (solo) 1 (2).svg";
 
 const StepContent = () => {
@@ -33,18 +36,33 @@ const OnboardingShell = () => (
           className="h-8 w-auto sm:h-10"
           priority
         />
-        <h1 className="text-2xl font-semibold text-slate-900 sm:text-4xl mt-[40px]" style={{lineHeight: "24px"}}>
-          Activá tus cobros en apenas tres pasos
+        <h1
+          className="mt-[40px] text-2xl font-semibold text-slate-900 sm:text-4xl"
+          style={{ lineHeight: "24px" }}
+        >
+          Activa tus cobros en apenas tres pasos
         </h1>
         <p className="text-sm text-slate-600 sm:text-base">
-          Te pedimos solo lo imprescindible para validar tu comercio según la
-          normativa argentina. Podés guardar tu avance y seguir después.
+          Te pedimos solo lo imprescindible para validar tu comercio segun la
+          normativa argentina. Puedes guardar tu avance y seguir despues.
         </p>
         <Link
           href="/modificaciones"
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#B1C20E] underline-offset-4 hover:underline"
         >
-          ¿Necesitás actualizar tus datos? Hacelo acá →
+          Necesitas actualizar tus datos? Hazlo aca
+        </Link>
+        <Link
+          href="/organizadores"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#B1C20E] underline-offset-4 hover:underline"
+        >
+          Eventos gratis
+        </Link>
+        <Link
+          href="/organizadores-pagos"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#B1C20E] underline-offset-4 hover:underline"
+        >
+          Eventos pagos
         </Link>
       </header>
       <StepContent />
